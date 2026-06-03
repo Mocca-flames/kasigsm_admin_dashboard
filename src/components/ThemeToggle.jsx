@@ -1,5 +1,6 @@
 import React from 'react';
-import { useTheme, THEME_MODES } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/useTheme';
+import { THEME_MODES } from '../contexts/themeConstants';
 
 const ThemeToggle = () => {
   const { themeMode, setTheme, isLight, isDark } = useTheme();

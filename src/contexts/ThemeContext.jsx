@@ -1,25 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
-// Theme modes
-export const THEME_MODES = {
-  LIGHT: 'light',
-  DARK: 'dark',
-  SYSTEM: 'system'
-};
+import { THEME_MODES } from './themeConstants';
+import { ThemeContext } from './ThemeContext';
 
-// Theme context
-const ThemeContext = createContext();
-
-// Custom hook to use theme
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
-// Theme provider component
 export const ThemeProvider = ({ children }) => {
   // Get initial theme from localStorage or default to system
   const [themeMode, setThemeMode] = useState(() => {

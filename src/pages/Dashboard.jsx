@@ -5,7 +5,6 @@ import Chart from '../components/Chart';
 import Button from '../components/Button';
 import { getStatsSummary, getAllOrders, getAllClients } from '../services/api';
 
-// Helper functions for formatting
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-ZA', {
         style: 'currency',
@@ -14,32 +13,31 @@ const formatCurrency = (amount) => {
     }).format(amount);
 };
 
-const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-ZA', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+const getCustomerName = (clientId, customers) => {
+    const customer = customers.find(c => c.id === clientId);
+    return customer ? customer.full_name : clientId;
 };
 
-const getClientName = (clientId, clients) => {
-    const client = clients.find(c => c.id === clientId);
-    return client ? client.full_name : clientId;
-};
+const REPAIR_STATUSES = [
+    'pending',
+    'accepted',
+    'in_progress',
+    'completed',
+    'cancelled'
+];
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
         totalOrders: 0,
         totalRevenue: 0,
         averagePrice: 0,
-        activeDrivers: 0,
         periodStart: '',
         periodEnd: '',
-        topClients: []
+        topCustomers: []
     });
     const [recentOrders, setRecentOrders] = useState([]);
     const [chartData, setChartData] = useState(null);
-    const [clients, setClients] = useState([]);
+    const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -49,48 +47,45 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-
-            // ✅ Use your real API endpoints
-            const [statsData, ordersData, clientsData] = await Promise.all([
-                getStatsSummary(30),  // Last 30 days
+            const [statsData, ordersData, customersData] = await Promise.all([
+                getStatsSummary(30),
                 getAllOrders(),
                 getAllClients()
             ]);
 
-            // ✅ Map API response to state
             setStats({
                 totalOrders: statsData.orders?.total || 0,
                 totalRevenue: statsData.revenue?.gross_revenue || 0,
                 averagePrice: statsData.revenue?.gross_revenue / statsData.orders?.total || 0,
-                activeDrivers: statsData.users?.total_drivers || 0,
                 periodStart: statsData.period_start,
                 periodEnd: statsData.period_end,
-                topClients: statsData.top_clients || []
+                topCustomers: statsData.top_clients || []
             });
 
-            // ✅ Get recent orders (last 5)
             setRecentOrders(ordersData.slice(0, 5));
+            setCustomers(customersData);
 
-            // ✅ Set clients data for mapping client IDs to names
-            setClients(clientsData);
-
-            // ✅ Prepare chart data from orders_by_status (if available)
             if (statsData.orders_by_status) {
                 setChartData({
                     labels: Object.keys(statsData.orders_by_status),
                     datasets: [{
-                        label: 'Orders by Status',
+                        label: 'Repair Orders by Status',
                         data: Object.values(statsData.orders_by_status),
-                        backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#6366f1']
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444']
                     }]
                 });
             } else {
                 setChartData({
-                    labels: ['Pending', 'Completed', 'Cancelled'],
+                    labels: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
                     datasets: [{
-                        label: 'Orders by Status',
-                        data: [statsData.orders?.total - statsData.orders?.completed || 0, statsData.orders?.completed || 0, 0],
-                        backgroundColor: ['#3b82f6', '#22c55e', '#ef4444']
+                        label: 'Repair Orders by Status',
+                        data: [
+                            statsData.orders?.total - statsData.orders?.completed || 0,
+                            statsData.orders?.in_progress || 0,
+                            statsData.orders?.completed || 0,
+                            0,
+                        ],
+                        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444']
                     }]
                 });
             }
@@ -102,11 +97,10 @@ const Dashboard = () => {
         }
     };
 
-    // ✅ Map order data to table columns
     const tableColumns = [
         { key: 'id', label: 'Order ID' },
-        { key: 'pickup_address', label: 'Pickup' },
-        { key: 'dropoff_address', label: 'Dropoff' },
+        { key: 'pickup_address', label: 'Device / Location' },
+        { key: 'dropoff_address', label: 'Issue / Notes' },
         {
             key: 'status',
             label: 'Status',
@@ -116,7 +110,7 @@ const Dashboard = () => {
                 </span>
             )
         },
-        { key: 'price', label: 'Price' }
+        { key: 'price', label: 'Repair Cost' }
     ];
 
     if (loading) {
@@ -128,11 +122,10 @@ const Dashboard = () => {
             <h1>Dashboard</h1>
             <p>Welcome back! Here's what's happening today.</p>
 
-            {/* Statistics Cards */}
             <div className="grid grid-4" style={{ marginTop: '32px', marginBottom: '32px' }}>
                 <StatCard
-                    icon="📦"
-                    label="Total Orders"
+                    icon="🔧"
+                    label="Total Repair Orders"
                     value={stats.totalOrders}
                     color="primary"
                 />
@@ -144,48 +137,42 @@ const Dashboard = () => {
                 />
                 <StatCard
                     icon="📊"
-                    label="Average Price"
+                    label="Avg Repair Cost"
                     value={formatCurrency(stats.averagePrice)}
                     color="info"
                 />
-                <StatCard
-                    icon="🚗"
-                    label="Active Drivers"
-                    value={stats.activeDrivers}
-                    color="warning"
-                />
             </div>
 
-            {/* Charts Section */}
             <div className="grid grid-2" style={{ marginBottom: '32px' }}>
-                <Card title="Orders by Status">
-                    <Chart
-                        type="bar"
-                        data={chartData}
-                        height={300}
-                    />
+                <Card title="Repair Orders by Status">
+                    {chartData ? (
+                        <Chart
+                            type="bar"
+                            data={chartData}
+                            height={300}
+                        />
+                    ) : (
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d' }}>Loading chart...</div>
+                    )}
                 </Card>
                 <Card title="Quick Actions">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <Button variant="primary" fullWidth>
-                            Create New Order
+                            Create Repair Ticket
                         </Button>
                         <Button variant="secondary" fullWidth>
-                            View All Orders
+                            All Repair Orders
                         </Button>
-                        <Button variant="outline" fullWidth>
-                            Manage Drivers
-                        </Button>
+
                     </div>
                 </Card>
             </div>
 
-            {/* Top Clients Section */}
             <div className="grid grid-1" style={{ marginBottom: '32px' }}>
-                <Card title="Top Clients">
+                <Card title="Top Customers">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {stats.topClients.length > 0 ? (
-                            stats.topClients.map((client, index) => (
+                        {Array.isArray(stats.topCustomers) && stats.topCustomers.length > 0 ? (
+                            stats.topCustomers.map((client, index) => (
                                 <div
                                     key={client.client_id}
                                     style={{
@@ -200,7 +187,7 @@ const Dashboard = () => {
                                 >
                                     <div>
                                         <span style={{ fontWeight: '500', color: '#495057' }}>
-                                            {getClientName(client.client_id, clients)}
+                                            {getCustomerName(client.client_id, customers)}
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -222,14 +209,14 @@ const Dashboard = () => {
                             ))
                         ) : (
                             <p style={{ textAlign: 'center', color: '#6c757d', margin: '20px 0' }}>
-                                No client data available
+                                No customer data available
                             </p>
                         )}
                     </div>
                 </Card>
             </div>
-            {/* Recent Orders Table */}
-            <Card title="Recent Orders" style={{ marginTop: '32px' }}>
+
+            <Card title="Recent Repair Orders" style={{ marginTop: '32px' }}>
                 <Table
                     columns={tableColumns}
                     data={recentOrders}

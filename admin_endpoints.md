@@ -1,786 +1,583 @@
-# Admin Panel API Guide
+# Admin Endpoints Documentation
 
-This guide documents the Admin API endpoints. All admin endpoints require an `admin_key` query parameter for authentication and use `/admin` as the base prefix.
+## Admin Login
 
-**Admin Key:** `admin_secret_key_123`
+- **Endpoint:** `POST /auth/login`
+- **Method:** `POST`
+- **Description:** Authenticate admin user and receive JWT token
+- **Request Body (form-data):**
+  - `username`: `juniorflamebet@gmail.com`
+  - `password`: `Maurice@12!`
+- **Response (200 OK):**
+```json
+{
+  "access_token": "jwt_token_here",
+  "token_type": "bearer"
+}
+```
+
+All other admin endpoints are prefixed with `/admin` and require admin authentication via JWT Bearer token.
 
 ---
 
-## 1. Authentication
+## 1. List All Categories
 
-**Requirement:**
-- `admin_key` (string, required) — Secret key for admin access
-- All admin requests must include `?admin_key=Maurice@12!`
-- Base URL prefix: `/api`
-
----
-
-## 2. API Endpoints
-
-### 2.1 Get All Clients
-
-- **Endpoint:** `GET /admin/clients`
+- **Endpoint:** `GET /admin/categories`
 - **Method:** `GET`
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
+- **Authentication:** Required (admin JWT)
 - **Response (200 OK):**
 ```json
 [
   {
-    "client_id": "string",
-    "full_name": "string",
+    "id": "uuid",
+    "name": "Tool Rental",
+    "slug": "tool-rental",
+    "description": null,
+    "is_active": true,
+    "created_at": "2026-06-02T10:00:00Z"
+  }
+]
+```
+
+---
+
+## 2. Create Category
+
+- **Endpoint:** `POST /admin/categories`
+- **Method:** `POST`
+- **Authentication:** Required (admin JWT)
+- **Query Parameters:**
+  - `name` (string, required)
+  - `description` (string, optional)
+- **Response (200 OK):**
+```json
+{
+  "id": "uuid",
+  "name": "Tool Rental",
+  "slug": "tool-rental",
+  "description": null,
+  "is_active": true
+}
+```
+- **Response (400):** Category 'X' already exists
+
+---
+
+## 3. Update Category
+
+- **Endpoint:** `PATCH /admin/categories/{id}`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Query Parameters:**
+  - `name` (string, optional)
+  - `is_active` (bool, optional)
+- **Response (200 OK):**
+```json
+{
+  "id": "uuid",
+  "name": "Tool Rental",
+  "slug": "tool-rental",
+  "is_active": true
+}
+```
+- **Response (404):** Category not found
+
+---
+
+## 4. Delete Category (Soft Delete)
+
+- **Endpoint:** `DELETE /admin/categories/{id}`
+- **Method:** `DELETE`
+- **Authentication:** Required (admin JWT)
+- **Response (200 OK):**
+```json
+{ "message": "Category 'Tool Rental' deactivated" }
+```
+- **Response (400):** Cannot deactivate category 'X': items still reference it
+
+---
+
+## 5. List Provider Category Markups
+
+- **Endpoint:** `GET /admin/providers/{id}/markups`
+- **Method:** `GET`
+- **Authentication:** Required (admin JWT)
+- **Response (200 OK):**
+```json
+[
+  {
+    "id": "uuid",
+    "category": "Tool Rental",
+    "price_markup": "15.00"
+  }
+]
+```
+
+---
+
+## 6. Create/Update Provider Category Markup
+
+- **Endpoint:** `POST /admin/providers/{id}/markups`
+- **Method:** `POST`
+- **Authentication:** Required (admin JWT)
+- **Query Parameters:**
+  - `category` (string, required)
+  - `price_markup` (decimal, required)
+- **Response (200 OK):**
+```json
+{
+  "id": "uuid",
+  "provider_id": "uuid",
+  "category": "Tool Rental",
+  "price_markup": "15.00"
+}
+```
+- **Response (404):** Provider not found
+
+---
+
+## 7. Delete Provider Category Markup
+
+- **Endpoint:** `DELETE /admin/providers/{id}/markups/{category}`
+- **Method:** `DELETE`
+- **Authentication:** Required (admin JWT)
+- **Note:** The `{category}` path parameter must be URL-encoded (e.g. use `encodeURIComponent(categoryName)` in JavaScript).
+- **Response (200 OK):**
+```json
+{ "message": "Markup for category 'Tool Rental' removed" }
+```
+- **Response (404):** Markup not found
+
+---
+
+## 8. Admin Item Detail — New Fields
+
+- **Endpoints:** `GET /admin/items`, `GET /admin/items/{id}`
+- **New fields in ItemDetail response:**
+
+```json
+{
+  "id": "uuid",
+  "title": "AMT - Android Multi Tool Rent",
+  "price_final": "29.52",
+  "effective_markup": "15.00",
+  "markup_source": "provider_category",
+  "provider_listings": [...]
+}
+```
+
+| Field            | Type   | Values                 | Description                                                      |
+|------------------|--------|------------------------|------------------------------------------------------------------|
+| effective_markup | Decimal | e.g. "15.00"          | The actual markup applied (from override or item fallback)       |
+| markup_source    | string | "item" or "provider_category" | Where the effective markup came from                      |
+
+These fields are admin-only — they are not present in `GET /items` (public) or client order responses.
+
+---
+
+## 9. Pricing Rules (Frontend Display Logic)
+
+The server resolves `price_final` deterministically:
+
+- **If the item has an active preferred ProviderListing (from an active provider):**
+  1. Check `ProviderCategoryMarkup` for that provider + item's category → use that markup
+  2. Else fall back to `Item.price_markup`
+  3. `price_final = cost_price + effective_markup`
+- **If no active preferred listing exists:**
+  - `price_final = Item.price_markup` (no cost_price added)
+
+**Note:** `OrderItem.unit_price` is a snapshot — it never changes after order creation, even if markups are edited later.
+
+---
+
+## 10. Category Validation on Item Create/Edit
+
+- **Endpoints affected:** `POST /admin/items`, `PATCH /admin/items/{id}`
+- **Behavior:** The `category` field is validated against the `Category` table.
+- **Response 400 if invalid:**
+```json
+{
+  "detail": "Category 'FakeCategory' is not recognized. Valid categories: ['Tool Rental', 'Remote Services', 'TestCategory']"
+}
+```
+- **Note:** The seed script (`scripts/seed_services.py`) auto-creates Category rows from `services_type` values, so categories are populated automatically as new suppliers are onboarded.
+
+---
+
+
+## 11. List All Items
+
+- **Endpoint:** `GET /admin/items`
+- **Method:** `GET`
+- **Authentication:** Required (admin JWT)
+- **Response (200 OK):**
+```json
+[
+  {
+    "id": "uuid",
+    "slug": "string",
+    "title": "string",
+    "description": "string or null",
+    "item_type": "SERVICE|PRODUCT",
+    "category": "string",
+    "thumbnail": "string or null",
+    "price_final": "decimal",
+    "currency": "string",
+    "delivery_time": "string or null",
+    "stock": "int or null",
+    "is_visible": true,
+    "low_stock": false
+  }
+]
+```
+
+---
+
+## 2. Create Item
+
+- **Endpoint:** `POST /admin/items`
+- **Method:** `POST`
+- **Authentication:** Required (admin JWT)
+- **Request Body:**
+```json
+{
+  "slug": "string (required)",
+  "title": "string (required)",
+  "description": "string (optional)",
+  "item_type": "SERVICE|PRODUCT (required)",
+  "category": "string (required)",
+  "thumbnail": "string (optional)",
+  "price_markup": "decimal (default: 0)",
+  "currency": "string (default: ZAR)",
+  "delivery_time": "string (optional)",
+  "stock": "int (optional)"
+}
+```
+- **Response (200 OK):** Returns `ItemDetail` object
+
+---
+
+## 3. Edit Item
+
+- **Endpoint:** `PATCH /admin/items/{item_id}`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `item_id` (string, required) — Item UUID
+- **Request Body:**
+```json
+{
+  "title": "string (optional)",
+  "description": "string (optional)",
+  "category": "string (optional)",
+  "thumbnail": "string (optional)",
+  "price_markup": "decimal (optional)",
+  "currency": "string (optional)",
+  "delivery_time": "string (optional)",
+  "stock": "int (optional)",
+  "is_visible": "bool (optional)"
+}
+```
+- **Response (200 OK):** Returns `ItemDetail` object
+- **Errors:** 404 if item not found
+
+---
+
+## 4. Set Item Markup
+
+- **Endpoint:** `PATCH /admin/items/{item_id}/markup`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `item_id` (string, required) — Item UUID
+- **Query Parameters:**
+  - `markup` (decimal, required) — New markup price
+- **Response (200 OK):** Returns `ItemDetail` object
+- **Errors:** 404 if item not found
+
+---
+
+## 5. Toggle Item Visibility
+
+- **Endpoint:** `PATCH /admin/items/{item_id}/visibility`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `item_id` (string, required) — Item UUID
+- **Query Parameters:**
+  - `is_visible` (bool, required) — Visibility state
+- **Response (200 OK):** Returns `ItemDetail` object
+- **Errors:** 404 if item not found
+
+---
+
+## 6. Archive Item (Soft Delete)
+
+- **Endpoint:** `DELETE /admin/items/{item_id}`
+- **Method:** `DELETE`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `item_id` (string, required) — Item UUID
+- **Response (200 OK):**
+```json
+{"message": "Item archived"}
+```
+- **Errors:** 404 if item not found
+
+---
+
+## 7. List Users
+
+- **Endpoint:** `GET /admin/users`
+- **Method:** `GET`
+- **Authentication:** Required (admin JWT)
+- **Response (200 OK):**
+```json
+[
+  {
+    "id": "uuid",
     "email": "string",
-    "phone_number": "string",
-    "home_address": "string",
-    "created_at": "string",
+    "role": "CLIENT|ADMIN",
     "is_active": true
   }
 ]
 ```
 
-### 2.2 Get All Drivers
+---
 
-- **Endpoint:** `GET /admin/drivers`
-- **Method:** `GET`
+## 8. Update User Status
+
+- **Endpoint:** `PATCH /admin/users/{user_id}`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `user_id` (string, required) — User UUID
 - **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
+  - `is_active` (bool, required) — User active status
 - **Response (200 OK):**
 ```json
-[
-  {
-    "driver_id": "string",
-    "email": "string",
-    "full_name": "string",
-    "license_no": "string",
-    "vehicle_type": "string",
-    "is_available": true
-  }
-]
+{"id": "uuid", "email": "string", "is_active": true}
 ```
+- **Errors:** 404 if user not found
 
-### 2.3 Get All Orders
+---
+
+## 9. List Orders
 
 - **Endpoint:** `GET /admin/orders`
 - **Method:** `GET`
+- **Authentication:** Required (admin JWT)
 - **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK)::**
+  - `status` (string, optional) — Filter by status: PENDING, PAID, FULFILLED, CANCELLED, REFUNDED
+- **Response (200 OK):**
 ```json
 [
   {
-    "id": "string",
-    "client_id": "string",
-    "driver_id": "string",
-    "order_type": "ride",
-    "status": "pending",
-    "pickup_address": "string",
-    "pickup_latitude": "string",
-    "pickup_longitude": "string",
-    "dropoff_address": "string",
-    "dropoff_latitude": "string",
-    "dropoff_longitude": "string",
-    "price": "string",
-    "distance_km": "string",
-    "special_instructions": "string",
-    "patient_details": "string",
-    "medical_items": "string",
-    "created_at": "2025-08-11T08:45:49.071Z"
+    "id": "uuid",
+    "status": "PENDING|PAID|FULFILLED|CANCELLED|REFUNDED",
+    "total_amount": "decimal"
   }
 ]
 ```
 
-### 2.4 Create Order
+---
 
-- **Endpoint:** `POST /admin/orders`
-- **Method:** `POST`
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Request Body:**
-```json
-{
-  "order_type": "ride",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "client_id": "string",
-  "distance_km": "string",
-  "special_instructions": "string",
-  "patient_details": "string",
-  "medical_items": "string"
-}
-```
-- **Response (201 Created):**
-```json
-{
-  "id": "string",
-  "client_id": "string",
-  "driver_id": "string",
-  "order_type": "ride",
-  "status": "pending",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "price": "string",
-  "distance_km": "string",
-  "special_instructions": "string",
-  "patient_details": "string",
-  "medical_items": "string",
-  "created_at": "2025-08-11T08:48:03.183Z"
-}
-```
-
-### 2.5 Delete Order
-
-- **Endpoint:** `DELETE /admin/orders/{order_id}`
-- **Method:** `DELETE`
-- **Path Parameters:**
-  - `order_id` (string, required) — ID of the order to delete
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "message": "Order successfully deleted",
-  "deleted_order": {
-    "id": "string",
-    "client_id": "string",
-    "driver_id": "string",
-    "order_type": "ride",
-    "status": "pending",
-    "pickup_address": "string",
-    "pickup_latitude": "string",
-    "pickup_longitude": "string",
-    "dropoff_address": "string",
-    "dropoff_latitude": "string",
-    "dropoff_longitude": "string",
-    "price": "string",
-    "distance_km": "string",
-    "special_instructions": "string",
-    "created_at": "2025-08-11T08:48:03.195Z"
-  }
-}
-```
-
-### 2.6 Calculate Price Preview
-
-- **Endpoint:** `POST /admin/pricing/calculate`
-- **Method:** `POST`
-- **Query Parameters:**
-  - `distance_km` (decimal, required) — Distance in kilometers
-  - `rate_per_km` (decimal, optional) — Custom rate per km
-  - `minimum_fare` (decimal, optional) — Custom minimum fare
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "distance_km": 10.5,
-  "rate_per_km": 10.0,
-  "minimum_fare": 50.0,
-  "calculated_price": 105.0,
-  "final_price": 105.0,
-  "minimum_fare_applied": false
-}
-```
-
-### 2.7 Override Order Price
-
-- **Endpoint:** `PATCH /admin/orders/{order_id}/price`
-- **Method:** `PATCH`
-- **Path Parameters:**
-  - `order_id` (string, required) — ID of the order to update
-- **Query Parameters:**
-  - `new_price` (decimal, required) — New price for the order
-  - `reason` (string, optional) — Reason for price override
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "id": "string",
-  "client_id": "string",
-  "driver_id": "string",
-  "order_type": "ride",
-  "status": "pending",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "price": "string",
-  "distance_km": "string",
-  "special_instructions": "string",
-  "patient_details": "string",
-  "medical_items": "string",
-  "created_at": "2025-08-11T08:48:03.183Z"
-}
-```
-
-### 2.8 Update Order Status
+## 10. Update Order Status
 
 - **Endpoint:** `PATCH /admin/orders/{order_id}/status`
 - **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
 - **Path Parameters:**
-  - `order_id` (string, required) — ID of the order to update
+  - `order_id` (string, required) — Order UUID
 - **Query Parameters:**
-  - `new_status` (string, required) — New status for the order
-  - `admin_key` (string, required) — Authentication key
+  - `status` (string, required) — New status: PENDING, PAID, FULFILLED, CANCELLED, REFUNDED
 - **Response (200 OK):**
 ```json
-{
-  "message": "Order status updated successfully"
-}
+{"id": "uuid", "status": "PENDING|PAID|FULFILLED|CANCELLED|REFUNDED"}
 ```
+- **Errors:** 404 if order not found
 
-### 2.9 Search Orders
+---
 
-- **Endpoint:** `GET /admin/orders/search`
-- **Method:** `GET`
-- **Query Parameters:**
-  - `client_email` (string, optional) — Search by client email
-  - `status` (string, optional) — Filter by order status
-  - `min_price` (decimal, optional) — Minimum price filter
-  - `max_price` (decimal, optional) — Maximum price filter
-  - `limit` (integer, optional) — Number of results to return (default: 50, max: 500)
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "total_found": 10,
-  "orders": [
-    {
-      "id": "string",
-      "client_id": "string",
-      "driver_id": "string",
-      "order_type": "ride",
-      "status": "pending",
-      "pickup_address": "string",
-      "pickup_latitude": "string",
-      "pickup_longitude": "string",
-      "dropoff_address": "string",
-      "dropoff_latitude": "string",
-      "dropoff_longitude": "string",
-      "price": "string",
-      "distance_km": "string",
-      "special_instructions": "string",
-      "patient_details": "string",
-      "medical_items": "string",
-      "created_at": "2025-08-11T08:45:49.071Z"
-    }
-  ]
-}
-```
+## 11. Bulk Upload Credentials
 
-### 2.10 Get Admin Stats Summary
-
-- **Endpoint:** `GET /admin/stats/summary`
-- **Method:** `GET`
-- **Query Parameters:**
-  - `days` (integer, optional) — Number of days to analyze (default: 30, max: 365)
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "period_days": 30,
-  "period_start": "2025-07-13",
-  "period_end": "2025-08-12",
-  "total_orders": 120,
-  "orders_by_status": {
-    "pending": 10,
-    "accepted": 20,
-    "in_progress": 30,
-    "completed": 50,
-    "cancelled": 10
-  },
-  "total_revenue": 5000.0,
-  "average_price": 41.67,
-  "active_drivers": 15,
-  "top_clients": [
-    {
-      "client_id": "client_123",
-      "orders": 12
-    }
-  ]
-}
-```
-
-### 2.11 Toggle Driver Availability
-
-- **Endpoint:** `POST /admin/drivers/{driver_id}/toggle-availability`
+- **Endpoint:** `POST /admin/credentials/bulk`
 - **Method:** `POST`
+- **Authentication:** Required (admin JWT)
 - **Path Parameters:**
-  - `driver_id` (string, required) — ID of the driver
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
+  - `item_id` (string, required) — Service item UUID
+- **Request:** `multipart/form-data` with `credentials_file` (JSON or CSV)
+- **File Format:**
+  - JSON: Array of objects or single object
+  - CSV: Key-value pairs as columns
 - **Response (200 OK):**
 ```json
-{
-  "message": "Driver availability toggled",
-  "driver_id": "string",
-  "is_available": true
-}
+{"item_id": "uuid", "credentials_added": 0}
 ```
+- **Errors:** 404 item not found, 400 if not SERVICE type or invalid file format
 
-### 2.12 Apply Pricing Preset
+---
 
-- **Endpoint:** `POST /admin/pricing/preset/{preset}`
-- **Method:** `POST`
-- **Path Parameters:**
-  - `preset` (string, required) — Pricing preset: rush_hour, off_peak, weekend, standard
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "preset_applied": "rush_hour",
-  "rate_per_km": 15.0,
-  "minimum_fare": 70.0,
-  "message": "Applied rush_hour pricing preset"
-}
-```
+## 12. Get Credential Pool
 
-### 2.13 Get Pricing Presets
-
-- **Endpoint:** `GET /admin/pricing/presets`
+- **Endpoint:** `GET /admin/credentials/{item_id}`
 - **Method:** `GET`
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-{
-  "presets": {
-    "rush_hour": {
-      "rate_per_km": "15.00",
-      "minimum_fare": "70.00",
-      "description": "Peak hours pricing"
-    },
-    "off_peak": {
-      "rate_per_km": "8.00",
-      "minimum_fare": "40.00",
-      "description": "Off-peak discount pricing"
-    },
-    "weekend": {
-      "rate_per_km": "12.00",
-      "minimum_fare": "60.00",
-      "description": "Weekend standard pricing"
-    },
-    "standard": {
-      "rate_per_km": "10.00",
-      "minimum_fare": "50.00",
-      "description": "Default pricing"
-    }
-  }
-}
-```
-
-### 2.14 Create Order with Custom Price
-
-- **Endpoint:** `POST /admin/orders/create-with-custom-price`
-- **Method:** `POST`
-- **Query Parameters:**
-  - `custom_price` (decimal, optional) — Override calculated price
-  - `admin_key` (string, required) — Authentication key
-- **Request Body:**
-```json
-{
-  "order_type": "ride",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "client_id": "string",
-  "distance_km": "string",
-  "special_instructions": "string",
-  "patient_details": "string",
-  "medical_items": "string"
-}
-```
-- **Response (201 Created):**
-```json
-{
-  "id": "string",
-  "client_id": "string",
-  "driver_id": "string",
-  "order_type": "ride",
-  "status": "pending",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "price": "string",
-  "distance_km": "string",
-  "special_instructions": "string",
-  "patient_details": "string",
-  "medical_items": "string",
-  "created_at": "2025-08-11T08:48:03.183Z"
-}
-```
-
-### 2.15 Get Order Price Breakdown
-
-- **Endpoint:** `GET /admin/orders/{order_id}/price-breakdown`
-- **Method:** `GET`
+- **Authentication:** Required (admin JWT)
 - **Path Parameters:**
-  - `order_id` (string, required) — ID of the order
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
+  - `item_id` (string, required) — Service item UUID
 - **Response (200 OK):**
 ```json
 {
-  "order_id": "string",
-  "actual_price": 120.0,
-  "distance_km": 10.5,
-  "rate_per_km": 10.0,
-  "minimum_fare": 50.0,
-  "calculated_price": 105.0,
-  "should_be_price": 105.0,
-  "minimum_fare_applied": false,
-  "is_custom_price": true,
-  "difference": 15.0,
-  "order_status": "completed",
-  "created_at": "2025-08-11T08:45:49.071Z"
+"item_id": "uuid",
+    "item_title": "string",
+    "total": 0,
+    "used": 0,
+    "remaining": 0,
+    "low_stock": false
 }
 ```
+- **Errors:** 404 if item not found
 
-### 2.16 Create Refund
+---
 
-- **Endpoint:** `POST /payments/refund`
-- **Method:** `POST`
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Request Body:**
-```json
-{
-  "payment_id": "string",
-  "order_id": "string",
-  "amount": "decimal",
-  "reason": "string"
-}
-```
-- **Response (200 OK):**
-```json
-{
-  "id": "string",
-  "payment_id": "string",
-  "order_id": "string",
-  "amount": "decimal",
-  "reason": "string",
-  "status": "pending",
-  "processed_at": "string",
-  "created_at": "2025-08-11T08:45:49.071Z",
-  "updated_at": "2025-08-11T08:45:49.071Z"
-}
-```
+## 13. List Banners
 
-### 2.17 Get Order Payments
-
-- **Endpoint:** `GET /payments/order/{order_id}`
+- **Endpoint:** `GET /admin/banners`
 - **Method:** `GET`
-- **Path Parameters:**
-  - `order_id` (string, required) — ID of the order
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
+- **Authentication:** Required (admin JWT)
 - **Response (200 OK):**
 ```json
 [
   {
-    "id": "string",
-    "order_id": "string",
-    "user_id": "string",
-    "payment_type": "client_payment",
-    "amount": "decimal",
-    "currency": "ZAR",
-    "payment_method": "credit_card",
-    "status": "completed",
-    "transaction_id": "string",
-    "created_at": "2025-08-11T08:45:49.071Z",
-    "updated_at": "2025-08-11T08:45:49.071Z"
+    "id": "uuid",
+    "slug": "string",
+    "title": "string",
+    "content": "string",
+    "image_url": "string or null",
+    "link_url": "string or null",
+    "is_active": true,
+    "is_dismissible": true,
+    "starts_at": "datetime or null",
+    "ends_at": "datetime or null",
+    "created_at": "datetime"
   }
 ]
 ```
 
-### 2.18 Get User Payments
+---
 
-- **Endpoint:** `GET /payments/user/{user_id}`
-- **Method:** `GET`
-- **Path Parameters:**
-  - `user_id` (string, required) — ID of the user
-- **Query Parameters:**
-  - `payment_type` (string, optional) — Filter by payment type (client_payment, driver_payment)
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-[
-  {
-    "id": "string",
-    "order_id": "string",
-    "user_id": "string",
-    "payment_type": "client_payment",
-    "amount": "decimal",
-    "currency": "ZAR",
-    "payment_method": "credit_card",
-    "status": "completed",
-    "transaction_id": "string",
-    "created_at": "2025-08-11T08:45:49.071Z",
-    "updated_at": "2025-08-11T08:45:49.071Z"
-  }
-]
-```
+## 14. Create Banner
 
-### 2.19 Get Order Refunds
-
-- **Endpoint:** `GET /payments/refunds/order/{order_id}`
-- **Method:** `GET`
-- **Path Parameters:**
-  - `order_id` (string, required) — ID of the order
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
-- **Response (200 OK):**
-```json
-[
-  {
-    "id": "string",
-    "payment_id": "string",
-    "order_id": "string",
-    "amount": "decimal",
-    "reason": "string",
-    "status": "completed",
-    "processed_at": "string",
-    "created_at": "2025-08-11T08:45:49.071Z",
-    "updated_at": "2025-08-11T08:45:49.071Z"
-  }
-]
-### 2.20 Create In-House Order
-
-- **Endpoint:** `POST /admin/orders/in-house`
+- **Endpoint:** `POST /admin/banners`
 - **Method:** `POST`
-- **Query Parameters:**
-  - `admin_key` (string, required) — Authentication key
+- **Authentication:** Required (admin JWT)
 - **Request Body:**
 ```json
 {
-  "order_type": "ride",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "distance_km": "string",
-  "total_paid": "decimal",
-  "payment_status": "string",
-  "special_instructions": "string"
+  "slug": "string (required)",
+  "title": "string (required)",
+  "content": "string (required)",
+  "image_url": "string (optional)",
+  "link_url": "string (optional)",
+  "is_active": true,
+  "is_dismissible": true,
+  "starts_at": "datetime (optional)",
+  "ends_at": "datetime (optional)"
 }
 ```
-- **Response (201 Created):**
-```json
-{
-  "id": "string",
-  "client_id": "string",
-  "driver_id": "string",
-  "order_type": "ride",
-  "status": "pending",
-  "pickup_address": "string",
-  "pickup_latitude": "string",
-  "pickup_longitude": "string",
-  "dropoff_address": "string",
-  "dropoff_latitude": "string",
-  "dropoff_longitude": "string",
-  "price": "string",
-  "distance_km": "string",
-  "special_instructions": "string",
-  "patient_details": "string",
-  "medical_items": "string",
-  "created_at": "2025-08-11T08:48:03.183Z"
-}
-```
-```
----
-
-## 3. Data Types and Enums
-
-### Order Types
-- `"ride"` — Standard ride service
-- `"medical"` — Medical transport service
-- `"delivery"` — Package delivery service
-
-### Order Status
-- `"pending"` — Order created, awaiting driver assignment
-- `"accepted"` — Driver assigned and accepted
-- `"in_progress"` — Order in progress
-- `"completed"` — Order completed successfully
-- `"cancelled"` — Order cancelled
-
-### User Roles
-- `"client"` — Regular customer
-- `"driver"` — Service driver
-- `"admin"` — Administrator
+- **Response (200 OK):** Returns banner object
 
 ---
 
-## 4. Error Responses
+## 15. Edit Banner
 
-### 400 Bad Request
+- **Endpoint:** `PATCH /admin/banners/{banner_id}`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `banner_id` (string, required) — Banner UUID
+- **Request Body:**
 ```json
 {
-  "error": "Bad Request",
-  "message": "Invalid input data or missing required fields"
+  "slug": "string (optional)",
+  "title": "string (optional)",
+  "content": "string (optional)",
+  "image_url": "string (optional)",
+  "link_url": "string (optional)",
+  "is_active": "bool (optional)",
+  "is_dismissible": "bool (optional)",
+  "starts_at": "datetime (optional)",
+  "ends_at": "datetime (optional)"
 }
 ```
-
-### 403 Forbidden
-```json
-{
-  "error": "Forbidden",
-  "message": "Invalid or missing admin_key"
-}
-```
-
-### 404 Not Found
-```json
-{
-  "error": "Not Found",
-  "message": "Resource not found"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-  "error": "Internal Server Error",
-  "message": "An unexpected error occurred"
-}
-```
+- **Response (200 OK):** Returns updated banner object
+- **Errors:** 404 if banner not found
 
 ---
 
-## 5. Usage Examples
+## 16. Delete Banner
 
-### Get All Clients
-```bash
-curl -X GET "/admin/clients?admin_key=admin_secret_key_123"
+- **Endpoint:** `DELETE /admin/banners/{banner_id}`
+- **Method:** `DELETE`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `banner_id` (string, required) — Banner UUID
+- **Response (200 OK):**
+```json
+{"message": "Banner deleted"}
 ```
+- **Errors:** 404 if banner not found
 
-### Create Order
-```bash
-curl -X POST "/admin/orders?admin_key=admin_secret_key_123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "order_type": "ride",
-    "pickup_address": "123 Main St",
-    "pickup_latitude": "-25.7479",
-    "pickup_longitude": "28.2293",
-    "dropoff_address": "456 Oak Ave",
-    "dropoff_latitude": "-25.7580",
-    "dropoff_longitude": "28.2400",
-    "client_id": "client_123",
-    "distance_km": "5.2",
-    "special_instructions": "Please wait at the gate"
-  }'
-```
+---
 
-### Delete Order
-```bash
-curl -X DELETE "/admin/orders/order_123?admin_key=admin_secret_key_123"
-```
+## 17. Toggle Banner Active Status
 
-### Calculate Price Preview
-```bash
-curl -X POST "/admin/pricing/calculate?distance_km=10.5&admin_key=Maurice@12!"
+- **Endpoint:** `PATCH /admin/banners/{banner_id}/toggle`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `banner_id` (string, required) — Banner UUID
+- **Query Parameters:**
+  - `is_active` (bool, required) — Active state
+- **Response (200 OK):**
+```json
+{"id": "uuid", "is_active": true}
 ```
+- **Errors:** 404 if banner not found
 
-### Override Order Price
-```bash
-curl -X PATCH "/admin/orders/order_123/price?new_price=150.0&reason=Special%20discount&admin_key=Maurice@12!"
-```
+---
 
-### Update Order Status
-```bash
-curl -X PATCH "/admin/orders/order_123/status?new_status=completed&admin_key=Maurice@12!"
-```
+## 18. List Providers (Suppliers)
 
-### Search Orders
-```bash
-### Create In-House Order
-```bash
-curl -X POST "/admin/orders/in-house?admin_key=Maurice@12!" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "order_type": "parcel_delivery",
-    "pickup_address": "Warehouse A",
-    "pickup_latitude": "-26.2041",
-    "pickup_longitude": "28.0473",
-    "dropoff_address": "Customer B",
-    "dropoff_latitude": "-26.1952",
-    "dropoff_longitude": "28.0341",
-    "distance_km": "12.5",
-    "total_paid": 125.00,
-    "payment_status": "completed"
-  }'
-```
-curl -X GET "/admin/orders/search?client_email=client@example.com&status=completed&admin_key=Maurice@12!"
-```
-
-### Get Admin Stats
-```bash
-curl -X GET "/admin/stats/summary?days=30&admin_key=Maurice@12!"
-```
-
-### Toggle Driver Availability
-```bash
-curl -X POST "/admin/drivers/driver_123/toggle-availability?admin_key=Maurice@12!"
-```
-
-### Apply Pricing Preset
-```bash
-curl -X POST "/admin/pricing/preset/rush_hour?admin_key=Maurice@12!"
-```
-
-### Get Pricing Presets
-```bash
-curl -X GET "/admin/pricing/presets?admin_key=Maurice@12!"
-```
-
-### Create Order with Custom Price
-```bash
-curl -X POST "/admin/orders/create-with-custom-price?custom_price=200.0&admin_key=Maurice@12!" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "order_type": "ride",
-    "pickup_address": "123 Main St",
-    "pickup_latitude": "-25.7479",
-    "pickup_longitude": "28.2293",
-    "dropoff_address": "456 Oak Ave",
-    "dropoff_latitude": "-25.7580",
-    "dropoff_longitude": "28.2400",
-    "client_id": "client_123",
-    "distance_km": "5.2",
-    "special_instructions": "Please wait at the gate"
-  }'
-```
-
-### Get Order Price Breakdown
-```bash
-curl -X GET "/admin/orders/order_123/price-breakdown?admin_key=Maurice@12!"
+- **Endpoint:** `GET /admin/providers`
+- **Method:** `GET`
+- **Authentication:** Required (admin JWT)
+- **Response (200 OK):**
+```json
+[
+  {
+    "id": "uuid",
+    "name": "string",
+    "base_url": "string or null",
+    "notes": "string or null",
+    "is_active": true
+  }
+]
 ```
 
 ---
 
-## 6. Notes
+## 19. Toggle Provider Status
 
-- All endpoints require HTTPS in production
-- Timestamps are in ISO 8601 format (UTC)
-- Latitude and longitude are stored as strings for precision
-- The admin key should be kept secure and rotated regularly
-- Rate limiting may apply to prevent abuse
-- All numeric values (price, distance) are stored as strings to maintain precision
-- The admin key has been updated to `Maurice@12!` for all new endpoints
+- **Endpoint:** `PATCH /admin/providers/{provider_id}`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `provider_id` (string, required) — Provider UUID
+- **Query Parameters:**
+  - `is_active` (bool, required) — Provider active status
+- **Response (200 OK):**
+```json
+{"id": "uuid", "is_active": true}
+```
+- **Errors:** 404 if provider not found

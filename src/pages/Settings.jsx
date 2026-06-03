@@ -1,172 +1,228 @@
 import React, { useState } from 'react';
 import { Card } from '../components/Card';
 
-/**
- * SETTINGS PAGE
- * Application settings and configurations
- * 
- * HOW TO CUSTOMIZE:
- * 1. Add your own settings sections
- * 2. Connect to your API for saving settings
- * 3. Add validation for form inputs
- */
-
 const Settings = () => {
     const [settings, setSettings] = useState({
-        siteName: 'Molotech',
-        email: 'admin@example.com',
-        notifications: true,
-        darkMode: false,
-        language: 'en',
+        shopName: 'KasI GSM',
+        contactEmail: 'admin@phonefix.co.za',
+        contactPhone: '',
+        defaultLang: 'en',
+        notificationsEnabled: true,
+        smsNotifications: true,
+        emailNotifications: true,
+        autoAssignTechnician: true,
+        enableWarrantyTracking: true,
+        vatRate: '15',
+        currency: 'ZAR',
     });
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setSettings(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: type === 'checkbox' ? checked : value,
         }));
     };
 
     const handleSave = (e) => {
         e.preventDefault();
         console.log('Save settings:', settings);
-        // TODO: Call API to save settings
-        alert('Settings saved successfully!');
+        alert('Shop settings saved successfully!');
     };
 
     return (
         <div>
             <h1>Settings</h1>
-            <p>Manage your application settings and preferences</p>
+            <p>Configure your phone repair shop — pricing, notifications, and workflow preferences.</p>
 
             <div className="grid grid-2" style={{ marginTop: '32px' }}>
                 {/* General Settings */}
-                <Card title="General Settings">
+                <Card title="Shop Details">
                     <form onSubmit={handleSave}>
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                                Site Name
+                                Shop Name
                             </label>
                             <input
                                 type="text"
-                                name="siteName"
-                                value={settings.siteName}
+                                name="shopName"
+                                value={settings.shopName}
                                 onChange={handleChange}
                                 style={{
-                                    width: '100%',
-                                    padding: '10px 12px',
+                                    width: '100%', padding: '10px 12px',
                                     border: '1px solid var(--border-color)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    fontSize: '14px'
+                                    borderRadius: 'var(--radius-sm)', fontSize: '14px'
                                 }}
                             />
                         </div>
-
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                                Admin Email
+                                Contact Email
                             </label>
                             <input
                                 type="email"
-                                name="email"
-                                value={settings.email}
+                                name="contactEmail"
+                                value={settings.contactEmail}
                                 onChange={handleChange}
                                 style={{
-                                    width: '100%',
-                                    padding: '10px 12px',
+                                    width: '100%', padding: '10px 12px',
                                     border: '1px solid var(--border-color)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    fontSize: '14px'
+                                    borderRadius: 'var(--radius-sm)', fontSize: '14px'
                                 }}
                             />
                         </div>
-
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-                                Language
+                                Contact Phone
+                            </label>
+                            <input
+                                type="tel"
+                                name="contactPhone"
+                                value={settings.contactPhone}
+                                onChange={handleChange}
+                                placeholder="+27 XX XXX XXXX"
+                                style={{
+                                    width: '100%', padding: '10px 12px',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-sm)', fontSize: '14px'
+                                }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                                Currency
                             </label>
                             <select
-                                name="language"
-                                value={settings.language}
+                                name="currency"
+                                value={settings.currency}
                                 onChange={handleChange}
                                 style={{
-                                    width: '100%',
-                                    padding: '10px 12px',
+                                    width: '100%', padding: '10px 12px',
                                     border: '1px solid var(--border-color)',
-                                    borderRadius: 'var(--radius-sm)',
-                                    fontSize: '14px'
+                                    borderRadius: 'var(--radius-sm)', fontSize: '14px'
                                 }}
                             >
-                                <option value="en">English</option>
-                                <option value="es">Spanish</option>
-                                <option value="fr">French</option>
-                                <option value="de">German</option>
+                                <option value="ZAR">ZAR – South African Rand</option>
+                                <option value="USD">USD – US Dollar</option>
+                                <option value="EUR">EUR – Euro</option>
                             </select>
                         </div>
-
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                                VAT / Tax Rate (%)
+                            </label>
+                            <input
+                                type="number"
+                                name="vatRate"
+                                value={settings.vatRate}
+                                onChange={handleChange}
+                                step="0.1"
+                                style={{
+                                    width: '100%', padding: '10px 12px',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-sm)', fontSize: '14px'
+                                }}
+                            />
+                        </div>
                         <button type="submit" className="btn btn-primary">
-                            💾 Save Changes
+                            Save Changes
                         </button>
                     </form>
                 </Card>
 
                 {/* Preferences */}
-                <Card title="Preferences">
+                <Card title="Workflow Preferences">
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', gap: '12px' }}>
                             <input
                                 type="checkbox"
-                                name="notifications"
-                                checked={settings.notifications}
+                                name="autoAssignTechnician"
+                                checked={settings.autoAssignTechnician}
                                 onChange={handleChange}
-                                style={{ marginRight: '12px', width: '18px', height: '18px' }}
+                                style={{ marginTop: '3px', width: '18px', height: '18px' }}
                             />
                             <div>
-                                <div style={{ fontWeight: '500' }}>Enable Notifications</div>
+                                <div style={{ fontWeight: '500' }}>Auto-Assign Technician</div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                    Receive email notifications for important updates
+                                    Automatically assign the next available technician when a ticket is created
                                 </div>
                             </div>
                         </label>
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', gap: '12px' }}>
                             <input
                                 type="checkbox"
-                                name="darkMode"
-                                checked={settings.darkMode}
+                                name="enableWarrantyTracking"
+                                checked={settings.enableWarrantyTracking}
                                 onChange={handleChange}
-                                style={{ marginRight: '12px', width: '18px', height: '18px' }}
+                                style={{ marginTop: '3px', width: '18px', height: '18px' }}
                             />
                             <div>
-                                <div style={{ fontWeight: '500' }}>Dark Mode</div>
+                                <div style={{ fontWeight: '500' }}>Warranty Tracking</div>
                                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                    Use dark theme for the interface
+                                    Track warranty status for each device and flag under-warranty jobs
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', gap: '12px' }}>
+                            <input
+                                type="checkbox"
+                                name="smsNotifications"
+                                checked={settings.smsNotifications}
+                                onChange={handleChange}
+                                style={{ marginTop: '3px', width: '18px', height: '18px' }}
+                            />
+                            <div>
+                                <div style={{ fontWeight: '500' }}>SMS Notifications</div>
+                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    Send SMS updates to customers when their repair status changes
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', gap: '12px' }}>
+                            <input
+                                type="checkbox"
+                                name="emailNotifications"
+                                checked={settings.emailNotifications}
+                                onChange={handleChange}
+                                style={{ marginTop: '3px', width: '18px', height: '18px' }}
+                            />
+                            <div>
+                                <div style={{ fontWeight: '500' }}>Email Notifications</div>
+                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    Send email receipts and status updates to customers
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer', gap: '12px' }}>
+                            <input
+                                type="checkbox"
+                                name="notificationsEnabled"
+                                checked={settings.notificationsEnabled}
+                                onChange={handleChange}
+                                style={{ marginTop: '3px', width: '18px', height: '18px' }}
+                            />
+                            <div>
+                                <div style={{ fontWeight: '500' }}>All Notifications</div>
+                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                    Master toggle for in-app notification badges
                                 </div>
                             </div>
                         </label>
                     </div>
                 </Card>
             </div>
-
-            {/* Danger Zone */}
-            <Card title="⚠️ Danger Zone" action={null}>
-                <div style={{ padding: '20px', backgroundColor: '#fef2f2', borderRadius: 'var(--radius-sm)', border: '1px solid #fecaca' }}>
-                    <h3 style={{ color: 'var(--danger)', marginBottom: '12px' }}>Delete Account</h3>
-                    <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
-                        Once you delete your account, there is no going back. Please be certain.
-                    </p>
-                    <button
-                        className="btn"
-                        style={{ backgroundColor: 'var(--danger)', color: 'white' }}
-                        onClick={() => alert('Account deletion would happen here')}
-                    >
-                        Delete Account
-                    </button>
-                </div>
-            </Card>
         </div>
     );
 };

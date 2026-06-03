@@ -2,48 +2,48 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
-/**
- * SIDEBAR COMPONENT
- * 
- * HOW TO CUSTOMIZE:
- * 1. Change logo and company name
- * 2. Add/remove navigation items
- * 3. Change icons (using emojis for simplicity)
- * 4. Update routes to match your pages
- */
-
 const Sidebar = () => {
     const location = useLocation();
 
-    // Check if current route matches
     const isActive = (path) => location.pathname === path;
 
-    // CUSTOMIZE THESE NAV ITEMS
     const navItems = [
         {
-            section: 'Main',
+            section: 'Overview',
             items: [
                 { path: '/', icon: '📊', label: 'Dashboard' },
-                { path: '/create-order', icon: '🛒', label: 'Create Order' },
             ]
         },
         {
-            section: 'Pricing',
+            section: 'Catalog',
             items: [
-                { path: '/price', icon: '💳', label: 'Pricing' },
+                { path: '/items', icon: '📦', label: 'Items' },
+                { path: '/services', icon: '📋', label: 'Services & Pricing' },
+                { path: '/suppliers', icon: '🏭', label: 'Suppliers' },
+                { path: '/categories', icon: '🗂️', label: 'Categories' },
+                { path: '/provider-markups', icon: '🏷️', label: 'Provider Markups' },
             ]
         },
         {
-            section: 'Management',
+            section: 'Orders',
             items: [
-                { path: '/clients', icon: '👥', label: 'Clients' },
-                { path: '/drivers', icon: '🚘', label: 'Drivers' },
                 { path: '/orders', icon: '🛒', label: 'Orders' },
+                { path: '/repair-orders', icon: '🔧', label: 'Repair Orders' },
             ]
         },
         {
-            section: 'Settings',
+            section: 'People',
             items: [
+                { path: '/customers', icon: '👥', label: 'Customers' },
+                { path: '/users', icon: '👤', label: 'Users' },
+                { path: '/technicians', icon: '🔧', label: 'Technicians' },
+            ]
+        },
+        {
+            section: 'Tools',
+            items: [
+                { path: '/credentials', icon: '🔐', label: 'Credentials' },
+                { path: '/banners', icon: '📢', label: 'Banners' },
                 { path: '/settings', icon: '⚙️', label: 'Settings' },
             ]
         }
@@ -51,13 +51,11 @@ const Sidebar = () => {
 
     return (
         <aside className="sidebar">
-            {/* Logo Section - CUSTOMIZE THIS */}
             <div className="sidebar-logo">
-                <div className="logo-icon">M</div>
-                <h2>Molo Admin</h2>
+                <div className="logo-icon">PF</div>
+                <h2>KasI GSM</h2>
             </div>
 
-            {/* Navigation */}
             <nav className="sidebar-nav">
                 {navItems.map((section, idx) => (
                     <div key={idx} className="nav-section">

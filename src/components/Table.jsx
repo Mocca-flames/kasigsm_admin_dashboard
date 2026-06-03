@@ -21,7 +21,7 @@ import '../styles/Table.css';
  * />
  */
 
-const Table = ({ columns, data, onEdit, onDelete }) => {
+const Table = ({ columns, data, onEdit, onDelete, renderActions }) => {
     return (
         <div className="table-container">
             <table className="table">
@@ -30,7 +30,7 @@ const Table = ({ columns, data, onEdit, onDelete }) => {
                         {columns.map((column) => (
                             <th key={column.key}>{column.label}</th>
                         ))}
-                        {(onEdit || onDelete) && <th>Actions</th>}
+                        {(onEdit || onDelete || renderActions) && <th>Actions</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -48,7 +48,7 @@ const Table = ({ columns, data, onEdit, onDelete }) => {
                                         {column.render ? column.render(row) : row[column.key]}
                                     </td>
                                 ))}
-                                {(onEdit || onDelete) && (
+                                {(onEdit || onDelete || renderActions) && (
                                     <td>
                                         <div className="action-buttons">
                                             {onEdit && (
@@ -69,6 +69,7 @@ const Table = ({ columns, data, onEdit, onDelete }) => {
                                                     🗑️
                                                 </button>
                                             )}
+                                            {renderActions && renderActions(row)}
                                         </div>
                                     </td>
                                 )}

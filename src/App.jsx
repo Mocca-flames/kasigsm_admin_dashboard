@@ -1,49 +1,122 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { useAuth } from './contexts/useAuth';
 import DashboardLayout from './layouts/DashboardLayout';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Clients from './pages/Clients';
-import Drivers from './pages/Drivers';
-import Orders from './pages/Orders';
-import Pricing from './pages/Pricing';
+import Customers from './pages/Customers';
+import RepairOrders from './pages/RepairOrders';
+import Services from './pages/Services';
 import Settings from './pages/Settings';
+import Items from './pages/Items';
+import Orders from './pages/Orders';
+import Credentials from './pages/Credentials';
+import Users from './pages/Users';
+import Technicians from './pages/Technicians';
+import Banners from './pages/Banners';
+import Providers from './pages/Providers';
+import Categories from './pages/Categories';
+import ProviderMarkups from './pages/ProviderMarkups';
 import NotFound from './pages/NotFound';
 import './styles/variables.css';
 import './App.css';
 
-/**
- * MAIN APP COMPONENT
- * Sets up routing and layout
- * 
- * HOW TO ADD NEW PAGES:
- * 1. Create page component in src/pages/
- * 2. Import it here
- * 3. Add <Route> below
- * 4. Add navigation item in Sidebar.jsx
- */
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
+
+const LoginRedirect = () => {
+  const { isAuthenticated } = useAuth();
+  return !isAuthenticated ? <Login /> : <Navigate to="/" replace />;
+};
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <DashboardLayout>
+      <AuthProvider>
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/drivers" element={<Drivers />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/price" element={<Pricing />} />
-
-            {/* ADD YOUR NEW ROUTES HERE */}
-            {/* <Route path="/orders" element={<Orders />} /> */}
-
-            {/* 404 Page */}
+            <Route path="/login" element={<LoginRedirect />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/customers" element={
+              <ProtectedRoute>
+                <DashboardLayout><Customers /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/repair-orders" element={
+              <ProtectedRoute>
+                <DashboardLayout><RepairOrders /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/services" element={
+              <ProtectedRoute>
+                <DashboardLayout><Services /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <DashboardLayout><Settings /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/items" element={
+              <ProtectedRoute>
+                <DashboardLayout><Items /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <DashboardLayout><Orders /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/credentials" element={
+              <ProtectedRoute>
+                <DashboardLayout><Credentials /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/users" element={
+                <ProtectedRoute>
+                    <DashboardLayout><Users /></DashboardLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/technicians" element={
+                <ProtectedRoute>
+                    <DashboardLayout><Technicians /></DashboardLayout>
+                </ProtectedRoute>
+            } />
+            <Route path="/banners" element={
+              <ProtectedRoute>
+                <DashboardLayout><Banners /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/suppliers" element={
+              <ProtectedRoute>
+                <DashboardLayout><Providers /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/categories" element={
+              <ProtectedRoute>
+                <DashboardLayout><Categories /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/provider-markups" element={
+              <ProtectedRoute>
+                <DashboardLayout><ProviderMarkups /></DashboardLayout>
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </DashboardLayout>
-      </BrowserRouter>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
