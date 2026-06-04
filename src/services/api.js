@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://3ac2-102-254-178-13.ngrok-free.app";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("admin_token");
@@ -32,7 +32,7 @@ api.interceptors.response.use(
 );
 
 export const login = async (email, password) => {
-  const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const baseURL = import.meta.env.VITE_API_URL || "https://3ac2-102-254-178-13.ngrok-free.app";
   const formData = new URLSearchParams();
   formData.append("username", email);
   formData.append("password", password);
