@@ -6,12 +6,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/admin': {
-        target: 'http://localhost:8000',
+        target: 'https://3ac2-102-254-178-13.ngrok-free.app',
         changeOrigin: true,
         secure: false,
       },
       '/auth': {
-        target: 'http://localhost:8000',
+        target: 'https://3ac2-102-254-178-13.ngrok-free.app',
         changeOrigin: true,
         secure: false,
       }
