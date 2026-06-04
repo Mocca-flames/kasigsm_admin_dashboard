@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://3ac2-102-254-178-13.ngrok-free.app";
+const useProxy = import.meta.env.VITE_USE_PROXY === 'true';
+const API_BASE_URL = useProxy ? '' : (import.meta.env.VITE_API_URL || "https://b686-102-253-152-3.ngrok-free.app");
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("admin_token");
@@ -32,7 +33,7 @@ api.interceptors.response.use(
 );
 
 export const login = async (email, password) => {
-  const baseURL = import.meta.env.VITE_API_URL || "https://3ac2-102-254-178-13.ngrok-free.app";
+  const baseURL = useProxy ? '' : (import.meta.env.VITE_API_URL || "https://b686-102-253-152-3.ngrok-free.app");
   const formData = new URLSearchParams();
   formData.append("username", email);
   formData.append("password", password);
@@ -47,10 +48,16 @@ export const logout = () => {
   window.dispatchEvent(new Event("auth-change"));
 };
 
-export const getItems = async ({ offset = 0, limit = 100 } = {}) => {
-  const response = await api.get('/admin/items', {
-    params: { offset, limit },
-  });
+export const getItems = async ({ offset = 0, limit = 100, q = '', item_type = '', category = '', brand = '', service = '', service_type = '', product = '', with_media = true, alphabetize = true }) => {
+  const params = { offset, limit, with_media, alphabetize };
+  if (q) params.q = q;
+  if (item_type) params.item_type = item_type;
+  if (category) params.category = category;
+  if (brand) params.brand = brand;
+  if (service) params.service = service;
+  if (service_type) params.service_type = service_type;
+  if (product !== '') params.product = product;
+  const response = await api.get('/admin/items', { params });
   return response.data;
 };
 
@@ -121,13 +128,6 @@ export const updateProviderLogo = async (providerId, formData) => {
   return response.data;
 };
 
-export const uploadCredentials = async (itemId, formData) => {
-  const response = await api.post(`/admin/credentials/${itemId}/bulk`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return response.data;
-};
-
 export const getCredentialPool = async (itemId) => {
   const response = await api.get(`/admin/credentials/${itemId}`);
   return response.data;
@@ -148,40 +148,15 @@ export const getAllClients = async () => {
   return response.data;
 };
 
-
-
-export const deleteOrder = async (orderId) => {
-  const response = await api.delete(`/admin/orders/${orderId}`);
+export const uploadCredentials = async (itemId, formData) => {
+  const response = await api.post(`/admin/credentials/bulk?item_id=${itemId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 };
 
-export const getPresetPrices = async () => {
-  const response = await api.get("/admin/pricing/presets");
-  return response.data;
-};
-
-export const applyPresetPrice = async (preset) => {
-  const response = await api.post(`/admin/pricing/preset/${preset}`);
-  return response.data;
-};
-
-export const calculatePricePreview = async (distance_km, rate_per_km, minimum_fare) => {
-  const url = `/admin/pricing/calculate?distance_km=${distance_km}` +
-    (rate_per_km ? `&rate_per_km=${rate_per_km}` : "") +
-    (minimum_fare ? `&minimum_fare=${minimum_fare}` : "");
-  const response = await api.post(url);
-  return response.data;
-};
-
-export const overrideOrderPrice = async (orderId, newPrice, reason) => {
-  const url = `/admin/orders/${orderId}/price?new_price=${newPrice}` +
-    (reason ? `&reason=${reason}` : "");
-  const response = await api.patch(url);
-  return response.data;
-};
-
-export const getOrderPriceBreakdown = async (order_id) => {
-  const response = await api.get(`/admin/orders/${order_id}/price-breakdown`);
+export const getVisitorSummary = async () => {
+  const response = await api.get('/admin/analytics/visitors');
   return response.data;
 };
 
@@ -279,6 +254,26 @@ export const deactivateCategory = async (id) => {
   return response.data;
 };
 
+export const getFulfillmentQueue = async () => {
+  const response = await api.get("/admin/orders/fulfillment-queue");
+  return response.data;
+};
+
+export const getOrderReadiness = async (orderId) => {
+  const response = await api.get(`/admin/orders/${orderId}/ready`);
+  return response.data;
+};
+
+export const fulfillOrder = async (orderId, credentials) => {
+  const response = await api.post(`/admin/orders/${orderId}/fulfill`, { credentials });
+  return response.data;
+};
+
+export const rejectOrder = async (orderId) => {
+  const response = await api.post(`/admin/orders/${orderId}/reject`);
+  return response.data;
+};
+
 export const getProviderMarkups = async (providerId) => {
   const response = await api.get(`/admin/providers/${providerId}/markups`);
   return response.data;
@@ -296,3 +291,54 @@ export const deleteProviderMarkup = async (providerId, category) => {
   return response.data;
 };
 
+export const getPresetPrices = async () => {
+  const response = await api.get("/admin/preset-prices");
+  return response.data;
+};
+
+export const applyPresetPrice = async (presetName) => {
+  const response = await api.post(`/admin/preset-prices/apply`, null, {
+    params: { preset_name: presetName },
+  });
+  return response.data;
+};
+
+export const calculatePricePreview = async (distance_km, rate_per_km, minimum_fare) => {
+  const response = await api.post("/admin/pricing/preview", null, {
+    params: {
+      distance_km: String(distance_km),
+      ...(rate_per_km !== null && { rate_per_km: String(rate_per_km) }),
+      ...(minimum_fare !== null && { minimum_fare: String(minimum_fare) }),
+    },
+  });
+  return response.data;
+};
+
+export const overrideOrderPrice = async (orderId, newPrice, reason) => {
+  const response = await api.patch(`/admin/orders/${orderId}/price`, null, {
+    params: {
+      new_price: String(newPrice),
+      ...(reason && { reason }),
+    },
+  });
+  return response.data;
+};
+
+export const getOrderPriceBreakdown = async (orderId) => {
+  const response = await api.get(`/admin/orders/${orderId}/price-breakdown`);
+  return response.data;
+};
+
+export const bulkCategoryMarkup = async (categoryName, markup) => {
+  const response = await api.post(`/admin/categories/${encodeURIComponent(categoryName)}/markup/bulk`, null, {
+    params: { markup: String(markup) },
+  });
+  return response.data;
+};
+
+export const bulkCategoryMarkupPercentage = async (categoryName, percentage) => {
+  const response = await api.post(`/admin/categories/${encodeURIComponent(categoryName)}/markup/bulk-percentage`, null, {
+    params: { percentage: String(percentage) },
+  });
+  return response.data;
+};

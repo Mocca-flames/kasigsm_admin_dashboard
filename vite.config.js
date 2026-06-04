@@ -6,12 +6,17 @@ export default defineConfig({
   server: {
     proxy: {
       '/admin': {
-        target: 'https://3ac2-102-254-178-13.ngrok-free.app',
+        target: 'https://b686-102-253-152-3.ngrok-free.app',
         changeOrigin: true,
         secure: false,
       },
       '/auth': {
-        target: 'https://3ac2-102-254-178-13.ngrok-free.app',
+        target: 'https://b686-102-253-152-3.ngrok-free.app',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/wallet': {
+        target: 'https://b686-102-253-152-3.ngrok-free.app',
         changeOrigin: true,
         secure: false,
       }

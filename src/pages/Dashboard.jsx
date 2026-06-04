@@ -1,45 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Card, StatCard } from '../components/Card';
-import Table from '../components/Table';
-import Chart from '../components/Chart';
-import Button from '../components/Button';
-import { getStatsSummary, getAllOrders, getAllClients } from '../services/api';
+import { getStatsSummary, getOrders } from '../services/api';
 import Icon from '../components/Icons';
-
-const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-ZA', {
-        style: 'currency',
-        currency: 'ZAR',
-        minimumFractionDigits: 2,
-    }).format(amount);
-};
-
-const getCustomerName = (clientId, customers) => {
-    const customer = customers.find(c => c.id === clientId);
-    return customer ? customer.full_name : clientId;
-};
-
-const REPAIR_STATUSES = [
-    'pending',
-    'accepted',
-    'in_progress',
-    'completed',
-    'cancelled'
-];
+import { RadialBarChart, RadialBar, Tooltip } from 'recharts';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
-        totalOrders: 0,
-        totalRevenue: 0,
-        averagePrice: 0,
-        periodStart: '',
-        periodEnd: '',
-        topCustomers: []
+        period_days: 30,
+        total_orders: 0,
+        orders_by_status: {},
+        total_revenue: '0',
+        total_clients: 0,
+        total_items: 0,
+        low_stock_items: 0,
+        fulfilled_orders: 0,
+        pending_fulfillment: 0,
+        refunded_orders: 0,
     });
-    const [recentOrders, setRecentOrders] = useState([]);
-    const [chartData, setChartData] = useState(null);
-    const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [recentOrders, setRecentOrders] = useState([]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -48,48 +27,13 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsData, ordersData, customersData] = await Promise.all([
+            const [statsData, ordersData] = await Promise.all([
                 getStatsSummary(30),
-                getAllOrders(),
-                getAllClients()
+                getOrders(),
             ]);
 
-            setStats({
-                totalOrders: statsData.orders?.total || 0,
-                totalRevenue: statsData.revenue?.gross_revenue || 0,
-                averagePrice: statsData.revenue?.gross_revenue / statsData.orders?.total || 0,
-                periodStart: statsData.period_start,
-                periodEnd: statsData.period_end,
-                topCustomers: statsData.top_clients || []
-            });
-
-            setRecentOrders(ordersData.slice(0, 5));
-            setCustomers(customersData);
-
-            if (statsData.orders_by_status) {
-                setChartData({
-                    labels: Object.keys(statsData.orders_by_status),
-                    datasets: [{
-                        label: 'Repair Orders by Status',
-                        data: Object.values(statsData.orders_by_status),
-                        backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444']
-                    }]
-                });
-            } else {
-                setChartData({
-                    labels: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
-                    datasets: [{
-                        label: 'Repair Orders by Status',
-                        data: [
-                            statsData.orders?.total - statsData.orders?.completed || 0,
-                            statsData.orders?.in_progress || 0,
-                            statsData.orders?.completed || 0,
-                            0,
-                        ],
-                        backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444']
-                    }]
-                });
-            }
+            setStats(statsData);
+            setRecentOrders(Array.isArray(ordersData) ? ordersData.slice(0, 5) : []);
 
             setLoading(false);
         } catch (error) {
@@ -98,21 +42,17 @@ const Dashboard = () => {
         }
     };
 
-    const tableColumns = [
-        { key: 'id', label: 'Order ID' },
-        { key: 'pickup_address', label: 'Device / Location' },
-        { key: 'dropoff_address', label: 'Issue / Notes' },
-        {
-            key: 'status',
-            label: 'Status',
-            render: (row) => (
-                <span className={`status-badge ${row.status}`}>
-                    {row.status}
-                </span>
-            )
-        },
-        { key: 'price', label: 'Repair Cost' }
-    ];
+    const ordersByStatus = stats.orders_by_status || {};
+    const statusEntries = Object.entries(ordersByStatus);
+
+    const statusColors = {
+        pending: '#ffc107',
+        processing: '#17a2b8',
+        completed: '#28a745',
+        fulfilled: '#28a745',
+        cancelled: '#dc3545',
+        refunded: '#6c757d',
+    };
 
     if (loading) {
         return <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>;
@@ -123,108 +63,232 @@ const Dashboard = () => {
             <h1>Dashboard</h1>
             <p>Welcome back! Here's what's happening today.</p>
 
-            <div className="grid grid-4" style={{ marginTop: '32px', marginBottom: '32px' }}>
+            <div className="grid grid-4" style={{ marginTop: '32px', marginBottom: '24px' }}>
                 <StatCard
-                    icon={<Icon name="wrench" size={18} />}
-                    label="Total Repair Orders"
-                    value={stats.totalOrders}
+                    icon={<Icon name="cart" size={18} />}
+                    label="Total Orders"
+                    value={stats.total_orders}
                     color="primary"
                 />
                 <StatCard
                     icon={<Icon name="dollar" size={18} />}
-                    label="Total Revenue"
-                    value={formatCurrency(stats.totalRevenue)}
+                    label="Revenue"
+                    value={Number(stats.total_revenue)}
                     color="success"
                 />
                 <StatCard
-                    icon={<Icon name="barchart" size={18} />}
-                    label="Avg Repair Cost"
-                    value={formatCurrency(stats.averagePrice)}
-                    color="info"
+                    icon={<Icon name="users" size={18} />}
+                    label="Total Clients"
+                    value={stats.total_clients}
+                    color="alt"
+                />
+                <StatCard
+                    icon={<Icon name="package" size={18} />}
+                    label="Total Items"
+                    value={stats.total_items}
+                    color="warning"
                 />
             </div>
 
-            <div className="grid grid-2" style={{ marginBottom: '32px' }}>
-                <Card title="Repair Orders by Status">
-                    {chartData ? (
-                        <Chart
-                            type="bar"
-                            data={chartData}
-                            height={300}
-                        />
-                    ) : (
-                        <div style={{ padding: '20px', textAlign: 'center', color: '#6c757d' }}>Loading chart...</div>
-                    )}
-                </Card>
-                <Card title="Quick Actions">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <Button variant="primary" fullWidth>
-                            Create Repair Ticket
-                        </Button>
-                        <Button variant="secondary" fullWidth>
-                            All Repair Orders
-                        </Button>
-
-                    </div>
-                </Card>
+            <div className="grid grid-3" style={{ marginBottom: '24px' }}>
+                <StatCard
+                    icon={<Icon name="check" size={18} />}
+                    label="Fulfilled Orders"
+                    value={stats.fulfilled_orders}
+                    color="success"
+                    className="card-sm"
+                />
+                <StatCard
+                    icon={<Icon name="clock" size={18} />}
+                    label="Pending Fulfillment"
+                    value={stats.pending_fulfillment}
+                    color="warning"
+                    className="card-sm"
+                />
+                <StatCard
+                    icon={<Icon name="x" size={18} />}
+                    label="Refunded Orders"
+                    value={stats.refunded_orders}
+                    color="danger"
+                    className="card-sm"
+                />
             </div>
 
-            <div className="grid grid-1" style={{ marginBottom: '32px' }}>
-                <Card title="Top Customers">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {Array.isArray(stats.topCustomers) && stats.topCustomers.length > 0 ? (
-                            stats.topCustomers.map((client, index) => (
+            {stats.low_stock_items > 0 && (
+                <div className="grid grid-1" style={{ marginBottom: '24px' }}>
+                    <Card title="Inventory Alert" color="danger">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Icon name="alert" size={24} />
+                            <div>
+                                <strong>{stats.low_stock_items}</strong> item{stats.low_stock_items !== 1 ? 's' : ''} are currently low in stock and may need restocking.
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {statusEntries.length > 0 && (
+                <div className="grid grid-1" style={{ marginBottom: '24px' }}>
+                    <Card title={`Orders by Status (Last ${stats.period_days || 30} Days)`}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                            {statusEntries.map(([status, count]) => (
                                 <div
-                                    key={client.client_id}
+                                    key={status}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        backgroundColor: '#f8f9fa',
+                                        border: '1px solid #e9ecef',
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            width: '12px',
+                                            height: '12px',
+                                            borderRadius: '50%',
+                                            backgroundColor: statusColors[status] || '#6c757d',
+                                        }}
+                                    />
+                                    <span style={{ textTransform: 'capitalize', color: '#495057' }}>{status}</span>
+                                    <span style={{ fontWeight: 600, color: '#212529' }}>{count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {recentOrders.length > 0 && (
+                <div className="grid grid-1" style={{ marginBottom: '24px' }}>
+                    <Card title="Recent Orders">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {recentOrders.map((order) => (
+                                <div
+                                    key={order.id}
                                     style={{
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center',
                                         padding: '12px',
-                                        backgroundColor: index % 2 === 0 ? '#f8f9fa' : '#ffffff',
+                                        backgroundColor: '#f8f9fa',
                                         borderRadius: '8px',
-                                        border: '1px solid #e9ecef'
+                                        border: '1px solid #e9ecef',
                                     }}
                                 >
                                     <div>
-                                        <span style={{ fontWeight: '500', color: '#495057' }}>
-                                            {getCustomerName(client.client_id, customers)}
-                                        </span>
+                                        <span style={{ fontWeight: 500, color: '#495057' }}>Order #{order.id}</span>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                         <span style={{ fontSize: '14px', color: '#6c757d' }}>
-                                            {client.orders} order{client.orders !== 1 ? 's' : ''}
+                                            {order.client_id || 'Guest'}
                                         </span>
-                                        <span style={{
-                                            backgroundColor: '#007bff',
-                                            color: 'white',
-                                            padding: '4px 8px',
-                                            borderRadius: '12px',
-                                            fontSize: '12px',
-                                            fontWeight: '500'
-                                        }}>
-                                            #{index + 1}
+                                        <span
+                                            className={`status-badge ${order.status}`}
+                                            style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '12px',
+                                                fontSize: '12px',
+                                                fontWeight: 500,
+                                                backgroundColor: statusColors[order.status] || '#6c757d',
+                                                color: 'white',
+                                                textTransform: 'capitalize',
+                                            }}
+                                        >
+                                            {order.status}
                                         </span>
                                     </div>
                                 </div>
-                            ))
-                        ) : (
-                            <p style={{ textAlign: 'center', color: '#6c757d', margin: '20px 0' }}>
-                                No customer data available
-                            </p>
-                        )}
+                            ))}
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            <div className="grid grid-1" style={{ marginBottom: '24px' }}>
+                <Card title="Inventory Status" className="animate-in">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div className="chart" style={{ maxWidth: '320px', margin: '0 auto' }}>
+                            <RadialBarChart
+                                width={320}
+                                height={260}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius="70%"
+                                outerRadius="100%"
+                                data={[
+                                    {
+                                        name: 'In Stock',
+                                        value: Math.max(0, stats.total_items - stats.low_stock_items),
+                                        fill: 'var(--accent)',
+                                    },
+                                    {
+                                        name: 'Low Stock',
+                                        value: stats.low_stock_items || 0,
+                                        fill: 'var(--color-warning)',
+                                    },
+                                    {
+                                        name: 'Out of Stock',
+                                        value: 0,
+                                        fill: 'var(--color-danger)',
+                                    },
+                                ]}
+                                startAngle={90}
+                                endAngle={-270}
+                            >
+                                <RadialBar
+                                    background={{ fill: 'transparent' }}
+                                    dataKey="value"
+                                    cornerRadius={8}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'var(--bg-card)',
+                                        border: `1px solid var(--border-subtle)`,
+                                        color: 'var(--text-primary)',
+                                        borderRadius: 'var(--radius-md)',
+                                        fontFamily: 'var(--font-body)',
+                                        fontSize: 'var(--text-sm)',
+                                        padding: '8px 12px',
+                                    }}
+                                    formatter={(value, name) => [`${value} items`, name]}
+                                />
+                            </RadialBarChart>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                            <span className="badge badge-info">In Stock {Math.max(0, stats.total_items - stats.low_stock_items)}</span>
+                            <span className="badge badge-warning">Low Stock {stats.low_stock_items || 0}</span>
+                            <span className="badge badge-danger">Out of Stock 0</span>
+                        </div>
                     </div>
                 </Card>
             </div>
 
-            <Card title="Recent Repair Orders" style={{ marginTop: '32px' }}>
-                <Table
-                    columns={tableColumns}
-                    data={recentOrders}
-                    onEdit={(row) => console.log('Edit order:', row)}
-                    onDelete={(row) => console.log('Delete order:', row)}
-                />
-            </Card>
+            <div className="grid grid-2" style={{ marginBottom: '24px' }}>
+                <Card title="Order Fulfillment">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: '#6c757d', fontSize: '14px' }}>Fulfilled</span>
+                            <span style={{ fontWeight: 600, color: '#28a745' }}>{stats.fulfilled_orders}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: '#6c757d', fontSize: '14px' }}>Pending</span>
+                            <span style={{ fontWeight: 600, color: '#ffc107' }}>{stats.pending_fulfillment}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: '#6c757d', fontSize: '14px' }}>Refunded</span>
+                            <span style={{ fontWeight: 600, color: '#6c757d' }}>{stats.refunded_orders}</span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '4px' }}>
+                            Total: {stats.total_orders} orders
+                        </div>
+                    </div>
+                </Card>
+            </div>
         </div>
     );
 };

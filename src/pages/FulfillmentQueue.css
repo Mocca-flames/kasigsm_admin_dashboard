@@ -1,0 +1,76 @@
+/* FulfillmentQueue page overrides */
+
+.loading-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+}
+
+.error-message {
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: var(--color-danger-dim);
+  color: var(--color-danger);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.fulfill-order-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fulfill-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fulfill-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fulfill-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.fulfill-item-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fulfill-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fulfill-item-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+}
+
+.fulfill-item-meta {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.fulfill-credential-field .input {
+  margin-top: 4px;
+}
+

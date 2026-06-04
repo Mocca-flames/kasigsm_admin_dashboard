@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/Card';
 import Table from '../components/Table';
 import Button from '../components/Button';
+import Icon from '../components/Icons';
 import { getOrders, updateOrderStatus } from '../services/api';
 
 const Orders = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,21 +71,32 @@ const Orders = () => {
         {loading ? (
           <div className="loading-state">Loading orders...</div>
         ) : (
-          <Table
-            columns={columns}
-            data={orders}
-            renderActions={(row) => (
-              <select
-                value={row.status}
-                onChange={(e) => handleStatusChange(row, e.target.value)}
-                className="input"
-              >
-                {statusOptions.map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            )}
-          />
+            <Table
+              columns={columns}
+              data={orders}
+              renderActions={(row) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => navigate(`/orders/${row.id}`)}
+                    leftIcon={<Icon name="clipboard" size={16} />}
+                  >
+                    Process
+                  </Button>
+                  <select
+                    value={row.status}
+                    onChange={(e) => handleStatusChange(row, e.target.value)}
+                    className="input"
+                    style={{ width: 'auto', minWidth: 130 }}
+                  >
+                    {statusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            />
         )}
       </Card>
     </div>

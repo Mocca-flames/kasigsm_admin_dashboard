@@ -32,8 +32,16 @@ import {
   Tag,
   Percent,
   Layout,
+  Columns3,
   Receipt,
   Banknote,
+  Wallet,
+  BanknoteArrowUp,
+  RefreshCw,
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -69,8 +77,16 @@ const ICON_MAP = {
   tag: Tag,
   percent: Percent,
   layout: Layout,
+  columns: Columns3,
   receipt: Receipt,
   bank: Banknote,
+  wallet: Wallet,
+  bankUp: BanknoteArrowUp,
+  refresh: RefreshCw,
+  chevronRight: ChevronRight,
+  chevronLeft: ChevronLeft,
+  chevronDown: ChevronDown,
+  chevronUp: ChevronUp,
 };
 
 const Icon = ({ name, size = 16, stroke = 2, className = '', ...props }) => {

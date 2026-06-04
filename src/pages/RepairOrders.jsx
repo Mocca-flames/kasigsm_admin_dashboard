@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../components/Card';
-import Button from '../components/Button';
 import Table from '../components/Table';
 import Modal from '../components/Modal';
-import Input from '../components/Input';
 import * as api from '../services/api';
 
 /**
@@ -27,11 +25,7 @@ const REPAIR_ORDER_STATUSES = [
 const RepairOrders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [deleteStatus, setDeleteStatus] = useState(null);
     const [updateStatus, setUpdateStatus] = useState(null);
-
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [orderToDelete, setOrderToDelete] = useState(null);
 
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [orderToUpdate, setOrderToUpdate] = useState(null);
@@ -52,28 +46,6 @@ const RepairOrders = () => {
     useEffect(() => {
         fetchOrders();
     }, []);
-
-    const handleDeleteClick = (row) => {
-        setOrderToDelete(row);
-        setShowDeleteModal(true);
-    };
-
-    const confirmDelete = async () => {
-        if (!orderToDelete) return;
-        try {
-            await api.deleteOrder(orderToDelete.id);
-            setDeleteStatus('success');
-            await fetchOrders();
-        } catch {
-            setDeleteStatus('error');
-        } finally {
-            setTimeout(() => {
-                setShowDeleteModal(false);
-                setOrderToDelete(null);
-                setDeleteStatus(null);
-            }, 1500);
-        }
-    };
 
     const handleStatusUpdateClick = (row) => {
         setOrderToUpdate(row);
@@ -187,18 +159,8 @@ const RepairOrders = () => {
             </div>
 
             <Card title="All Repair Orders">
-                <Table columns={tableColumns} data={orders} onEdit={(r) => console.log('Edit:', r)} onDelete={handleDeleteClick} />
+                <Table columns={tableColumns} data={orders} onEdit={(r) => console.log('Edit:', r)} />
             </Card>
-
-            <Modal isOpen={showDeleteModal} onClose={() => { setShowDeleteModal(false); setOrderToDelete(null); setDeleteStatus(null); }} title="Confirm Delete" actions={[
-                { label: 'Cancel', onClick: () => { setShowDeleteModal(false); setOrderToDelete(null); setDeleteStatus(null); }, variant: 'secondary' },
-                { label: 'Delete', onClick: confirmDelete, variant: 'danger' }
-            ]}>
-                <p>Are you sure you want to delete repair ticket #{orderToDelete?.id}?</p>
-                <p>This action cannot be undone.</p>
-                {deleteStatus === 'success' && <div style={{ color: 'green', marginTop: '10px' }}>Repair order deleted successfully!</div>}
-                {deleteStatus === 'error' && <div style={{ color: 'red', marginTop: '10px' }}>Failed. Please try again.</div>}
-            </Modal>
 
             <Modal isOpen={showStatusModal} onClose={() => { setShowStatusModal(false); setOrderToUpdate(null); setNewStatus(''); setUpdateStatus(null); }} title={`Update Status — Ticket #${orderToUpdate?.id}`} actions={[
                 { label: 'Cancel', onClick: () => { setShowStatusModal(false); setOrderToUpdate(null); setNewStatus(''); setUpdateStatus(null); }, variant: 'secondary' },

@@ -12,11 +12,13 @@
   "dependencies": {
     "axios": "^1.13.1",
     "chart.js": "^4.5.1",
+    "countup.js": "^2.10.0",
+    "lucide-react": "^1.x.x",
     "react": "^19.1.1",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5",
-    "lucide-react": "^1.x.x"
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

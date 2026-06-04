@@ -12,11 +12,16 @@ import Services from './pages/Services';
 import Settings from './pages/Settings';
 import Items from './pages/Items';
 import Orders from './pages/Orders';
+import FulfillmentQueue from './pages/FulfillmentQueue';
+import OrderDetail from './pages/OrderDetail';
 import Credentials from './pages/Credentials';
 import Users from './pages/Users';
 import Technicians from './pages/Technicians';
 import Banners from './pages/Banners';
 import Providers from './pages/Providers';
+import Wallets from './pages/Wallets';
+import TopUps from './pages/TopUps';
+import BulkMarkupManager from './pages/BulkMarkupManager';
 import Categories from './pages/Categories';
 import ProviderMarkups from './pages/ProviderMarkups';
 import NotFound from './pages/NotFound';
@@ -78,6 +83,16 @@ function App() {
                 <DashboardLayout><Orders /></DashboardLayout>
               </ProtectedRoute>
             } />
+            <Route path="/fulfillment-queue" element={
+              <ProtectedRoute>
+                <DashboardLayout><FulfillmentQueue /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/orders/:orderId" element={
+              <ProtectedRoute>
+                <DashboardLayout><OrderDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/credentials" element={
               <ProtectedRoute>
                 <DashboardLayout><Credentials /></DashboardLayout>
@@ -111,6 +126,21 @@ function App() {
             <Route path="/provider-markups" element={
               <ProtectedRoute>
                 <DashboardLayout><ProviderMarkups /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/wallets" element={
+              <ProtectedRoute>
+                <DashboardLayout><Wallets /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/wallet/top-ups" element={
+              <ProtectedRoute>
+                <DashboardLayout><TopUps /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/bulk-markups" element={
+              <ProtectedRoute>
+                <DashboardLayout><BulkMarkupManager /></DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

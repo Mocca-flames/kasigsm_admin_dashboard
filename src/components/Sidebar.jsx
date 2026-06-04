@@ -29,15 +29,23 @@ const Sidebar = () => {
             section: 'Orders',
             items: [
                 { path: '/orders', icon: <Icon name="clipboard" size={16} />, label: 'Orders' },
+                { path: '/fulfillment-queue', icon: <Icon name="package" size={16} />, label: 'Fulfillment Queue' },
                 { path: '/repair-orders', icon: <Icon name="wrench" size={16} />, label: 'Repair Orders' },
             ]
         },
         {
             section: 'People',
             items: [
-                { path: '/customers', icon: <Icon name="user" size={16} />, label: 'Customers' },
                 { path: '/users', icon: <Icon name="users" size={16} />, label: 'Users' },
                 { path: '/technicians', icon: <Icon name="wrench" size={16} />, label: 'Technicians' },
+            ]
+        },
+        {
+            section: 'Finance',
+            items: [
+                { path: '/wallets', icon: <Icon name="wallet" size={16} />, label: 'Wallets' },
+                { path: '/wallet/top-ups', icon: <Icon name="bankUp" size={16} />, label: 'Top-Ups' },
+                { path: '/bulk-markups', icon: <Icon name="percent" size={16} />, label: 'Bulk Markups' },
             ]
         },
         {

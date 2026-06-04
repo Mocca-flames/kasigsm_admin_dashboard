@@ -1,4 +1,4 @@
-/* DESIGN SYSTEM - Dark Glass & Light Mode Design Tokens */
+/* DESIGN SYSTEM — Dark Glass & Light Mode Design Tokens */
 
 /* Dark Mode (default) */
 :root {
@@ -53,6 +53,12 @@
 
   --gradient-cta:
     linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+
+  /* Chart fill areas — use as SVG linearGradient stops */
+  --chart-fill-primary:   rgba(56, 189, 248, 0.40);
+  --chart-fill-fade:      rgba(56, 189, 248, 0.00);
+  --chart-fill-success:   rgba(52, 211, 153, 0.40);
+  --chart-fill-danger:    rgba(248, 113, 113, 0.40);
 
   /* ── Shadows ─────────────────────────────── */
   --shadow-sm:     0 1px 3px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.25);
@@ -111,9 +117,29 @@
   --duration-base:   250ms;
   --duration-slow:   400ms;
 
-  /* ── Legacy variables (kept for compatibility) ───────── */
+  /* ── Layout constants ────────────────────── */
   --sidebar-width: 240px;
   --header-height: 70px;
+
+  /* ── Legacy aliases (dark theme) ────────── */
+  --primary-color: #38bdf8;
+  --primary-hover: #0ea5e9;
+  --primary-light: rgba(56, 189, 248, 0.12);
+  --bg-main: #080c14;
+  --bg-secondary: #0d1117;
+  --bg-tertiary: #1a2235;
+  --bg-hover: #161f2e;
+  --border-color: rgba(255, 255, 255, 0.10);
+  --border-hover: rgba(255, 255, 255, 0.18);
+  --success: #34d399;
+  --success-light: rgba(52, 211, 153, 0.12);
+  --warning: #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-light: rgba(248, 113, 113, 0.12);
+  --info: #38bdf8;
+  --info-light: rgba(56, 189, 248, 0.12);
+  --transition: all 0.3s ease;
 }
 
 /* Light Mode */
@@ -169,6 +195,11 @@
   --gradient-cta:
     linear-gradient(135deg, #0284c7 0%, #6366f1 100%);
 
+  --chart-fill-primary: rgba(2, 132, 199, 0.30);
+  --chart-fill-fade:    rgba(2, 132, 199, 0.00);
+  --chart-fill-success: rgba(5, 150, 105, 0.30);
+  --chart-fill-danger:  rgba(220, 38, 38, 0.30);
+
   /* ── Shadows ─────────────────────────────── */
   --shadow-sm:     0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
   --shadow-md:     0 2px 8px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.07);
@@ -176,7 +207,7 @@
   --shadow-accent: 0 4px 20px rgba(2, 132, 199, 0.20);
   --shadow-inset:  inset 0 1px 0 rgba(255,255,255,0.80);
 
-  /* ── Legacy variables (kept for compatibility) ───────── */
+  /* ── Legacy aliases (light theme) ────────── */
   --primary-color: #0284c7;
   --primary-hover: #0369a1;
   --primary-light: rgba(2, 132, 199, 0.08);
@@ -194,27 +225,5 @@
   --danger-light: rgba(220, 38, 38, 0.08);
   --info: #0284c7;
   --info-light: rgba(2, 132, 199, 0.08);
-  --transition: all 0.3s ease;
-}
-
-/* Add legacy dark mode variables */
-[data-theme="dark"] {
-  --primary-color: #38bdf8;
-  --primary-hover: #0ea5e9;
-  --primary-light: rgba(56, 189, 248, 0.12);
-  --bg-main: #080c14;
-  --bg-secondary: #0d1117;
-  --bg-tertiary: #1a2235;
-  --bg-hover: #161f2e;
-  --border-color: rgba(255, 255, 255, 0.10);
-  --border-hover: rgba(255, 255, 255, 0.18);
-  --success: #34d399;
-  --success-light: rgba(52, 211, 153, 0.12);
-  --warning: #fbbf24;
-  --warning-light: rgba(251, 191, 36, 0.12);
-  --danger: #f87171;
-  --danger-light: rgba(248, 113, 113, 0.12);
-  --info: #38bdf8;
-  --info-light: rgba(56, 189, 248, 0.12);
   --transition: all 0.3s ease;
 }
