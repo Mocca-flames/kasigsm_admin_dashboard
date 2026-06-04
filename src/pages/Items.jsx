@@ -4,6 +4,8 @@ import Table from '../components/Table';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import DropZone from '../components/DropZone';
+import Icon from '../components/Icons';
 import { getItems, createItem, updateItem, toggleItemVisibility, archiveItem } from '../services/api';
 
 const Items = () => {
@@ -32,8 +34,30 @@ const Items = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getItems();
-      setItems(data);
+      const BATCH = 50;
+      const CONCURRENT = 4;
+      let offset = 0;
+      const all = [];
+
+      while (true) {
+        const promises = [];
+        for (let i = 0; i < CONCURRENT; i++) {
+          promises.push(getItems({ offset: offset + i * BATCH, limit: BATCH }));
+        }
+        const results = await Promise.all(promises);
+        let anyEmpty = false;
+        for (const batch of results) {
+          if (batch.length === 0) {
+            anyEmpty = true;
+            break;
+          }
+          all.push(...batch);
+        }
+        if (anyEmpty) break;
+        offset += BATCH * CONCURRENT;
+        if (results.some((r) => r.length < BATCH)) break;
+      }
+      setItems(all);
     } catch {
       setError('Failed to load items');
     } finally {
@@ -136,6 +160,17 @@ const Items = () => {
     { key: 'currency', label: 'Currency' },
     { key: 'stock', label: 'Stock' },
     {
+      key: 'thumbnail',
+      label: 'Thumbnail',
+      render: (row) => (
+        row.thumbnail ? (
+          <img src={row.thumbnail} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border-color)' }} />
+        ) : (
+          <span style={{ color: 'var(--text-muted)' }}>—</span>
+        )
+      ),
+    },
+    {
       key: 'is_visible',
       label: 'Visible',
       render: (row) => (
@@ -144,7 +179,7 @@ const Items = () => {
           onClick={() => handleVisibilityToggle(row)}
           title={row.is_visible ? 'Hide' : 'Show'}
         >
-          {row.is_visible ? '✓' : '✗'}
+          {row.is_visible ? <Icon name="check" size={14} /> : <Icon name="x" size={14} />}
         </button>
       ),
     },
@@ -214,10 +249,11 @@ const Items = () => {
             onChange={(e) => handleChange('category', e.target.value)}
             required
           />
-          <Input
-            label="Thumbnail URL"
+          <DropZone
+            label="Thumbnail"
             value={formData.thumbnail}
-            onChange={(e) => handleChange('thumbnail', e.target.value)}
+            onFileSelected={(url) => handleChange('thumbnail', url)}
+            onClear={() => handleChange('thumbnail', '')}
           />
           <Input
             label="Price Markup"

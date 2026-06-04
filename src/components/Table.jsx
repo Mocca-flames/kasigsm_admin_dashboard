@@ -1,5 +1,6 @@
 import React from 'react';
 import '../styles/Table.css';
+import Icon from './Icons';
 
 /**
  * TABLE COMPONENT
@@ -57,7 +58,7 @@ const Table = ({ columns, data, onEdit, onDelete, renderActions }) => {
                                                     onClick={() => onEdit(row)}
                                                     title="Edit"
                                                 >
-                                                    ✏️
+                                                    <Icon name="edit" size={16} />
                                                 </button>
                                             )}
                                             {onDelete && (
@@ -66,7 +67,7 @@ const Table = ({ columns, data, onEdit, onDelete, renderActions }) => {
                                                     onClick={() => onDelete(row)}
                                                     title="Delete"
                                                 >
-                                                    🗑️
+                                                    <Icon name="trash" size={16} />
                                                 </button>
                                             )}
                                             {renderActions && renderActions(row)}

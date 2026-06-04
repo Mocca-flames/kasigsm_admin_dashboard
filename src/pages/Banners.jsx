@@ -4,6 +4,8 @@ import Table from '../components/Table';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import DropZone from '../components/DropZone';
+import Icon from '../components/Icons';
 import { getBanners, createBanner, updateBanner, deleteBanner, toggleBannerActive } from '../services/api';
 
 const Banners = () => {
@@ -111,6 +113,17 @@ const Banners = () => {
 
   const columns = [
     { key: 'title', label: 'Title' },
+    {
+      key: 'image_url',
+      label: 'Image',
+      render: (row) => (
+        row.image_url ? (
+          <img src={row.image_url} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border-color)' }} />
+        ) : (
+          <span style={{ color: 'var(--text-muted)' }}>—</span>
+        )
+      ),
+    },
     { key: 'content', label: 'Content' },
     { key: 'slug', label: 'Slug' },
     {
@@ -122,7 +135,7 @@ const Banners = () => {
           onClick={() => handleToggleActive(row)}
           title={row.is_active ? 'Deactivate' : 'Activate'}
         >
-          {row.is_active ? '✓' : '✗'}
+          {row.is_active ? <Icon name="check" size={14} /> : <Icon name="x" size={14} />}
         </button>
       ),
     },
@@ -186,10 +199,11 @@ const Banners = () => {
             onChange={(e) => handleChange('content', e.target.value)}
             required
           />
-          <Input
-            label="Image URL"
+          <DropZone
+            label="Banner Image"
             value={formData.image_url}
-            onChange={(e) => handleChange('image_url', e.target.value)}
+            onFileSelected={(url) => handleChange('image_url', url)}
+            onClear={() => handleChange('image_url', '')}
           />
           <Input
             label="Link URL"

@@ -554,20 +554,65 @@ The server resolves `price_final` deterministically:
 - **Authentication:** Required (admin JWT)
 - **Response (200 OK):**
 ```json
-[
-  {
-    "id": "uuid",
-    "name": "string",
-    "base_url": "string or null",
-    "notes": "string or null",
-    "is_active": true
-  }
-]
+{
+  "id": "uuid",
+  "name": "string",
+  "base_url": "string or null",
+  "notes": "string or null",
+  "is_active": true,
+  "logo_url": "string or null"
+}
 ```
 
 ---
 
-## 19. Toggle Provider Status
+## 19a. Upload Media
+
+- **Endpoint:** `POST /admin/upload`
+- **Method:** `POST`
+- **Authentication:** Required (admin JWT)
+- **Request:** `multipart/form-data` with `file` field
+- **Response (200 OK):**
+```json
+{"url": "/media/..."}
+```
+- **Response (400):** File too large, unsupported file type
+
+---
+
+## 19b. Update Provider Logo
+
+- **Endpoint:** `PATCH /admin/providers/{provider_id}/logo`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `provider_id` (string, required) — Provider UUID
+- **Request:** `multipart/form-data` with `file` field (optional) or `logo_url` query param (optional)
+- **Response (200 OK):**
+```json
+{"id": "uuid", "logo_url": "/media/..."}
+```
+- **Errors:** 404 provider not found, 400 if neither file nor logo_url provided
+
+---
+
+## 19c. Update Item Thumbnail
+
+- **Endpoint:** `PATCH /admin/items/{item_id}/thumbnail`
+- **Method:** `PATCH`
+- **Authentication:** Required (admin JWT)
+- **Path Parameters:**
+  - `item_id` (string, required) — Item UUID
+- **Request:** `multipart/form-data` with `file` field (optional) or `thumbnail_url` query param (optional)
+- **Response (200 OK):**
+```json
+{"id": "uuid", "thumbnail": "/media/...", "media_url": "/media/..."}
+```
+- **Errors:** 404 item not found, 400 if neither file nor thumbnail_url provided
+
+---
+
+## 20. Toggle Provider Status
 
 - **Endpoint:** `PATCH /admin/providers/{provider_id}`
 - **Method:** `PATCH`

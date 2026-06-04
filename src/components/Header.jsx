@@ -2,6 +2,7 @@ import React from 'react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../contexts/useAuth';
 import '../styles/Header.css';
+import Icon from './Icons';
 
 const Header = () => {
     const { logout } = useAuth();
@@ -9,7 +10,7 @@ const Header = () => {
     return (
         <header className="header">
             <div className="header-search">
-                <span className="search-icon">🔍</span>
+                <span className="search-icon"><Icon name="search" size={16} /></span>
                 <input
                     type="text"
                     className="search-input"
@@ -19,12 +20,12 @@ const Header = () => {
 
             <div className="header-actions">
                 <button className="header-icon-btn">
-                    <span>🔔</span>
+                    <span><Icon name="bell" size={16} /></span>
                     <span className="notification-badge">5</span>
                 </button>
 
                 <button className="header-icon-btn">
-                    <span>💬</span>
+                    <span><Icon name="message" size={16} /></span>
                     <span className="notification-badge">3</span>
                 </button>
 

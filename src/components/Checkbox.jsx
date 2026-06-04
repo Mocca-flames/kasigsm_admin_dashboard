@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import '../styles/Checkbox.css';
+import Icon from './Icons';
 
 /**
  * CHECKBOX COMPONENT
@@ -63,7 +64,7 @@ const Checkbox = forwardRef(({
           {...props}
         />
         <span className={checkboxClasses}>
-          {indeterminate ? '−' : checked ? '✓' : ''}
+          {indeterminate ? <Icon name="minus" size={14} /> : checked ? <Icon name="check" size={14} /> : ''}
         </span>
         {label && (
           <span className="checkbox-label">

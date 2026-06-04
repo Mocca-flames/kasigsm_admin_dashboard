@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 import { getPresetPrices, applyPresetPrice, calculatePricePreview, overrideOrderPrice, getOrderPriceBreakdown } from '../services/api';
 import '../styles/Pricing.css';
+import Icon from '../components/Icons';
 
 /* eslint-disable no-unused-vars */
 // Catch bindings below are intentionally unused — errors are represented via state
@@ -140,14 +141,14 @@ const Services = () => {
   /* ── Service icons for known presets ── */
   const getServiceIcon = (name) => {
     const map = {
-      screen_replacement: '📱',
-      battery_replacement: '🔋',
-      charging_port: '🔌',
-      water_damage: '💧',
-      camera_repair: '📷',
-      software_repair: '💻',
+      screen_replacement: <Icon name="smartphone" size={16} />,
+      battery_replacement: <Icon name="battery" size={16} />,
+      charging_port: <Icon name="plug" size={16} />,
+      water_damage: <Icon name="droplet" size={16} />,
+      camera_repair: <Icon name="camera" size={16} />,
+      software_repair: <Icon name="laptop" size={16} />,
     };
-    return map[name] || '🔧';
+    return map[name] || <Icon name="wrench" size={16} />;
   };
 
   return (
@@ -314,8 +315,8 @@ const Services = () => {
               size="md"
             >
               <div style={{ textAlign: 'center' }}>
-                {modal.type === 'success' && <div style={{ color: 'var(--success)', fontSize: '3rem', marginBottom: '1rem' }}>✓</div>}
-                {modal.type === 'error' && <div style={{ color: 'var(--danger)', fontSize: '3rem', marginBottom: '1rem' }}>✕</div>}
+                {modal.type === 'success' && <div style={{ color: 'var(--success)', fontSize: '3rem', marginBottom: '1rem' }}><Icon name="check" size={36} /></div>}
+                {modal.type === 'error' && <div style={{ color: 'var(--danger)', fontSize: '3rem', marginBottom: '1rem' }}><Icon name="x" size={36} /></div>}
                 <p style={{ marginBottom: '1rem' }}>{modal.message}</p>
                 {modal.data && modal.type === 'success' && (
                   <div style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'left' }}>

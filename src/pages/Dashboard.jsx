@@ -4,6 +4,7 @@ import Table from '../components/Table';
 import Chart from '../components/Chart';
 import Button from '../components/Button';
 import { getStatsSummary, getAllOrders, getAllClients } from '../services/api';
+import Icon from '../components/Icons';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -124,19 +125,19 @@ const Dashboard = () => {
 
             <div className="grid grid-4" style={{ marginTop: '32px', marginBottom: '32px' }}>
                 <StatCard
-                    icon="🔧"
+                    icon={<Icon name="wrench" size={18} />}
                     label="Total Repair Orders"
                     value={stats.totalOrders}
                     color="primary"
                 />
                 <StatCard
-                    icon="💰"
+                    icon={<Icon name="dollar" size={18} />}
                     label="Total Revenue"
                     value={formatCurrency(stats.totalRevenue)}
                     color="success"
                 />
                 <StatCard
-                    icon="📊"
+                    icon={<Icon name="barchart" size={18} />}
                     label="Avg Repair Cost"
                     value={formatCurrency(stats.averagePrice)}
                     color="info"

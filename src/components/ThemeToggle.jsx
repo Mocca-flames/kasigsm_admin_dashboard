@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../contexts/useTheme';
 import { THEME_MODES } from '../contexts/themeConstants';
+import Icon from './Icons';
 
 const ThemeToggle = () => {
   const { themeMode, setTheme, isLight, isDark } = useTheme();
@@ -16,9 +17,9 @@ const ThemeToggle = () => {
   };
 
   const getIcon = () => {
-    if (isLight) return '☀️';
-    if (isDark) return '🌙';
-    return '💻'; // System mode
+    if (isLight) return <Icon name="sun" size={18} />;
+    if (isDark) return <Icon name="moon" size={18} />;
+    return <Icon name="laptop" size={18} />; // System mode
   };
 
   const getTooltip = () => {

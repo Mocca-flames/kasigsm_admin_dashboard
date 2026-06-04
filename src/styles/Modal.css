@@ -11,20 +11,31 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: var(--spacing-md);
+  padding: var(--space-4);
   backdrop-filter: blur(2px);
 }
 
 .modal {
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-lg);
   max-width: 90vw;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   animation: modalFadeIn 0.2s ease-out;
+}
+
+.modal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-card-shine);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 /* Modal Sizes */
@@ -53,14 +64,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
 
@@ -70,9 +82,9 @@
   font-size: 1.5rem;
   color: var(--text-muted);
   cursor: pointer;
-  padding: var(--spacing-xs);
+  padding: var(--space-1);
   border-radius: var(--radius-sm);
-  transition: all var(--transition);
+  transition: all var(--duration-fast) var(--ease);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,13 +93,13 @@
 }
 
 .modal-close:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--accent-dim);
   color: var(--text-primary);
 }
 
 /* Modal Body */
 .modal-body {
-  padding: var(--spacing-lg);
+  padding: var(--space-6);
   overflow-y: auto;
   flex: 1;
 }
@@ -97,9 +109,9 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* Animations */
@@ -117,7 +129,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .modal-overlay {
-    padding: var(--spacing-sm);
+    padding: var(--space-2);
   }
 
   .modal {
@@ -128,7 +140,7 @@
   .modal-header,
   .modal-body,
   .modal-footer {
-    padding: var(--spacing-md);
+    padding: var(--space-4);
   }
 
   .modal-footer {

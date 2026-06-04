@@ -4,7 +4,7 @@ import Table from '../components/Table';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Input from '../components/Input';
-import { getCategories, createCategory, updateCategory, deactivateCategory } from '../services/api';
+import { getCategories, createCategory, updateCategory } from '../services/api';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -41,15 +41,29 @@ const Categories = () => {
     setFormData({ name: item.name || '', description: item.description || '' });
   };
 
-  const handleDelete = async (item) => {
+  const handleDeactivate = async (item) => {
     const confirmed = window.confirm(`Deactivate category '${item.name}'?`);
     if (!confirmed) return;
     try {
       setActionLoading(true);
-      await deactivateCategory(item.id);
+      await updateCategory(item.id, { is_active: false });
       setCategories(prev => prev.map(c => c.id === item.id ? { ...c, is_active: false } : c));
     } catch (err) {
       setError(err?.response?.data?.detail || 'Failed to deactivate category');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleActivate = async (item) => {
+    const confirmed = window.confirm(`Activate category '${item.name}'?`);
+    if (!confirmed) return;
+    try {
+      setActionLoading(true);
+      await updateCategory(item.id, { is_active: true });
+      setCategories(prev => prev.map(c => c.id === item.id ? { ...c, is_active: true } : c));
+    } catch (err) {
+      setError(err?.response?.data?.detail || 'Failed to activate category');
     } finally {
       setActionLoading(false);
     }
@@ -112,18 +126,27 @@ const Categories = () => {
             columns={columns}
             data={categories}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={handleDeactivate}
             renderActions={(row) =>
               row.is_active ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDelete(row)}
+                  onClick={() => handleDeactivate(row)}
                   disabled={actionLoading}
                 >
                   Deactivate
                 </Button>
-              ) : null
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleActivate(row)}
+                  disabled={actionLoading}
+                >
+                  Activate
+                </Button>
+              )
             }
           />
         )}

@@ -47,8 +47,10 @@ export const logout = () => {
   window.dispatchEvent(new Event("auth-change"));
 };
 
-export const getItems = async () => {
-  const response = await api.get("/admin/items");
+export const getItems = async ({ offset = 0, limit = 100 } = {}) => {
+  const response = await api.get('/admin/items', {
+    params: { offset, limit },
+  });
   return response.data;
 };
 
@@ -95,6 +97,27 @@ export const getOrders = async (status) => {
 
 export const updateOrderStatus = async (orderId, status) => {
   const response = await api.patch(`/admin/orders/${orderId}/status?status=${status}`);
+  return response.data;
+};
+
+export const uploadMedia = async (formData) => {
+  const response = await api.post('/admin/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const updateItemThumbnail = async (itemId, formData) => {
+  const response = await api.patch(`/admin/items/${itemId}/thumbnail`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const updateProviderLogo = async (providerId, formData) => {
+  const response = await api.patch(`/admin/providers/${providerId}/logo`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 };
 
@@ -194,6 +217,11 @@ export const getProviders = async () => {
 
 export const toggleProviderStatus = async (providerId, isActive) => {
   const response = await api.patch(`/admin/providers/${providerId}?is_active=${isActive}`);
+  return response.data;
+};
+
+export const updateProvider = async (providerId, updates) => {
+  const response = await api.patch(`/admin/providers/${providerId}`, null, { params: updates });
   return response.data;
 };
 
