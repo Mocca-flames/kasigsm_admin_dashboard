@@ -3,6 +3,7 @@ import '../styles/Table.css';
 import Icon from './Icons';
 
 const Table = ({ columns, data, onEdit, onDelete, renderActions }) => {
+    const normalizedData = Array.isArray(data) ? data : [];
     const [showColumnMenu, setShowColumnMenu] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState(() => columns.map(c => c.key));
     const menuRef = useRef(null);
@@ -64,14 +65,14 @@ const Table = ({ columns, data, onEdit, onDelete, renderActions }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.length === 0 ? (
+                    {normalizedData.length === 0 ? (
                         <tr>
                             <td colSpan={activeColumns.length + 1} style={{ textAlign: 'center', padding: '40px' }}>
                                 No data available
                             </td>
                         </tr>
                     ) : (
-                        data.map((row, idx) => (
+                        normalizedData.map((row, idx) => (
                             <tr key={idx}>
                                 {activeColumns.map((column) => (
                                     <td key={column.key}>

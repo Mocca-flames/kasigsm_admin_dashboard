@@ -24,6 +24,7 @@ import TopUps from './pages/TopUps';
 import BulkMarkupManager from './pages/BulkMarkupManager';
 import Categories from './pages/Categories';
 import ProviderMarkups from './pages/ProviderMarkups';
+import PromoCodes from './pages/PromoCodes';
 import NotFound from './pages/NotFound';
 import './styles/variables.css';
 import './App.css';
@@ -141,6 +142,11 @@ function App() {
             <Route path="/bulk-markups" element={
               <ProtectedRoute>
                 <DashboardLayout><BulkMarkupManager /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/promo-codes" element={
+              <ProtectedRoute>
+                <DashboardLayout><PromoCodes /></DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

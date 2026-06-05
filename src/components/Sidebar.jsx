@@ -53,6 +53,7 @@ const Sidebar = () => {
             items: [
                 { path: '/credentials', icon: <Icon name="key" size={16} />, label: 'Credentials' },
                 { path: '/banners', icon: <Icon name="image" size={16} />, label: 'Banners' },
+                { path: '/promo-codes', icon: <Icon name="tag" size={16} />, label: 'Promo Codes' },
                 { path: '/settings', icon: <Icon name="settings" size={16} />, label: 'Settings' },
             ]
         }

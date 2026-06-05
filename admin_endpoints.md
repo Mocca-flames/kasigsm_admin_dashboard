@@ -541,6 +541,158 @@ All admin routes are mounted with `Depends(require_admin)`.
 
 ---
 
+## Promo Codes (`/promo-codes`)
+
+### 45. List Promo Codes
+
+- **Endpoint:** `GET /promo-codes`
+- **Auth:** ADMIN
+- **Query Parameters:**
+  - `active_only` (bool, optional) — when true, filter to active codes only
+- **Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "uuid",
+      "code": "WELCOME20",
+      "description": "20% off first order",
+      "discount_type": "PERCENTAGE|FIXED_AMOUNT",
+      "discount_value": "20.00",
+      "min_order_amount": "100.00",
+      "max_discount_amount": "50.00",
+      "max_uses": 100,
+      "max_uses_per_user": 1,
+      "valid_from": "2026-01-01T00:00:00Z",
+      "valid_until": "2026-12-31T23:59:59Z",
+      "is_active": true,
+      "current_uses": 42,
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+  ```
+
+### 46. Get Promo Code
+
+- **Endpoint:** `GET /promo-codes/{promo_id}`
+- **Auth:** ADMIN
+- **Response (200 OK):** Same shape as list items above.
+- **Errors:** 404 if not found.
+
+### 47. Create Promo Code
+
+- **Endpoint:** `POST /promo-codes`
+- **Auth:** ADMIN
+- **Request Body:**
+  ```json
+  {
+    "code": "WELCOME20",
+    "description": "20% off first order",
+    "discount_type": "PERCENTAGE",
+    "discount_value": 20,
+    "min_order_amount": "100.00",
+    "max_discount_amount": "50.00",
+    "max_uses": 100,
+    "max_uses_per_user": 1,
+    "valid_from": "2026-01-01T00:00:00Z",
+    "valid_until": "2026-12-31T23:59:59Z",
+    "applicable_categories": "Tool Rental, Remote Services",
+    "applicable_items": "uuid1,uuid2",
+    "is_active": true
+  }
+  ```
+- **Validation rules:**
+  - `code` is uppercased, must be >= 3 chars, alphanumeric + `-`/`_`
+  - `discount_type` must be `PERCENTAGE` or `FIXED_AMOUNT`
+  - `PERCENTAGE` value must be 0–100; `FIXED_AMOUNT` must be >= 0
+- **Errors:** 400 if code already exists or validation fails.
+
+### 48. Update Promo Code
+
+- **Endpoint:** `PATCH /promo-codes/{promo_id}`
+- **Auth:** ADMIN
+- **Request Body (partial):**
+  ```json
+  { "is_active": false, "max_uses": 200 }
+  ```
+- **Errors:** 404 if not found.
+
+### 49. Delete Promo Code
+
+- **Endpoint:** `DELETE /promo-codes/{promo_id}`
+- **Auth:** ADMIN
+- **Response:** `{ "message": "Promo code deleted" }`
+- **Errors:** 404 if not found.
+
+### 50. List Promo Code Usages
+
+- **Endpoint:** `GET /promo-codes/{promo_id}/usages`
+- **Auth:** ADMIN
+- **Query Parameters:** `offset` (default 0), `limit` (default 100, max 500)
+- **Response (200 OK):**
+  ```json
+  [
+    {
+      "id": "uuid",
+      "promo_code_id": "uuid",
+      "user_id": "uuid",
+      "order_id": "uuid",
+      "discount_amount": "20.00",
+      "order_amount": "200.00",
+      "used_at": "2026-06-01T12:00:00Z"
+    }
+  ]
+  ```
+- **Errors:** 404 if promo code not found.
+
+### 51. Validate Promo Code
+
+- **Endpoint:** `POST /promo-codes/validate`
+- **Auth:** Authenticated user (CLIENT or ADMIN)
+- **Request Body:**
+  ```json
+  { "code": "WELCOME20", "order_amount": "200.00" }
+  ```
+- **Response (200 OK):**
+  ```json
+  {
+    "valid": true,
+    "code": "WELCOME20",
+    "discount_type": "PERCENTAGE",
+    "discount_value": "20.00",
+    "discount_amount": "40.00",
+    "message": null
+  }
+  ```
+- **Failure response:**
+  ```json
+  { "valid": false, "code": "WELCOME20", "discount_type": "", "discount_value": "0", "discount_amount": "0", "message": "This promo code has expired" }
+  ```
+- **Checks performed:** existence, active flag, date window, max uses, per-user limit, min order amount, category/item applicability.
+
+### 52. Apply Promo Code (preview)
+
+- **Endpoint:** `POST /promo-codes/apply`
+- **Auth:** Authenticated user (CLIENT or ADMIN)
+- **Behavior:** Same validation as `/validate` but also returns the final discounted amount. Does **not** create an order or usage record — use this for a cart preview.
+- **Request Body:**
+  ```json
+  { "code": "WELCOME20" }
+  ```
+- **Response (200 OK):**
+  ```json
+  {
+    "valid": true,
+    "code": "WELCOME20",
+    "discount_type": "PERCENTAGE",
+    "discount_value": "20.00",
+    "discount_amount": "40.00",
+    "final_amount": "160.00"
+  }
+  ```
+- **Errors:** 403 if not authenticated.
+
+---
+
 ## Payments
 
 ### 45. Initiate Payment

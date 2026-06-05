@@ -342,3 +342,37 @@ export const bulkCategoryMarkupPercentage = async (categoryName, percentage) => 
   });
   return response.data;
 };
+
+export const getPromoCodes = async (activeOnly = false) => {
+  const params = {};
+  if (activeOnly) params.active_only = true;
+  const response = await api.get('/promo-codes', { params });
+  return response.data;
+};
+
+export const getPromoCode = async (promoId) => {
+  const response = await api.get(`/promo-codes/${promoId}`);
+  return response.data;
+};
+
+export const createPromoCode = async (promoData) => {
+  const response = await api.post('/promo-codes', promoData);
+  return response.data;
+};
+
+export const updatePromoCode = async (promoId, promoData) => {
+  const response = await api.patch(`/promo-codes/${promoId}`, promoData);
+  return response.data;
+};
+
+export const deletePromoCode = async (promoId) => {
+  const response = await api.delete(`/promo-codes/${promoId}`);
+  return response.data;
+};
+
+export const getPromoCodeUsages = async (promoId, offset = 0, limit = 100) => {
+  const response = await api.get(`/promo-codes/${promoId}/usages`, {
+    params: { offset, limit },
+  });
+  return response.data;
+};

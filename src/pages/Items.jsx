@@ -425,7 +425,7 @@ const filteredItems = useMemo(() => {
         </div>
       </div>
 
-      <div className={`items-layout`}>
+      <div className={`items-layout ${sidebarOpen ? 'items-layout-filter-open' : 'items-layout-filter-closed'}`}>
         {/* Sidebar Filters */}
         <aside className={`filter-sidebar ${sidebarOpen ? 'filter-sidebar-open' : 'filter-sidebar-closed'}`}>
           <div className="filter-inner">
