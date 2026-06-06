@@ -6,17 +6,17 @@ export default defineConfig({
   server: {
     proxy: {
       '/admin': {
-        target: 'https://b686-102-253-152-3.ngrok-free.app',
+        target: 'http://api.kasigsm.co.za:8000',
         changeOrigin: true,
         secure: false,
       },
       '/auth': {
-        target: 'https://b686-102-253-152-3.ngrok-free.app',
+        target: 'http://api.kasigsm.co.za:8000',
         changeOrigin: true,
         secure: false,
       },
       '/wallet': {
-        target: 'https://b686-102-253-152-3.ngrok-free.app',
+        target: 'http://api.kasigsm.co.za:8000',
         changeOrigin: true,
         secure: false,
       }
