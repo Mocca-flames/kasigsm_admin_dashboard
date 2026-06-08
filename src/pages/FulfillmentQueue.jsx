@@ -127,13 +127,8 @@ const FulfillmentQueue = () => {
             key: 'total_amount',
             label: 'Total',
             render: (row) => (
-                <span style={{ fontFamily: 'var(--font-mono)' }}>{Number(row.total_amount).toFixed(2)}</span>
+                <span style={{ fontFamily: 'var(--font-mono)' }}>{Number(row.total_amount).toFixed(2)} ZAR</span>
             ),
-        },
-        {
-            key: 'currency',
-            label: 'Currency',
-            render: (row) => row.currency || 'ZAR',
         },
         {
             key: 'created_at',
@@ -142,7 +137,7 @@ const FulfillmentQueue = () => {
         },
     ];
 
-    const serviceItems = selectedOrder?.readiness?.items?.filter((item) => item.item_type === 'SERVICE') || [];
+    const serviceItems = selectedOrder?.readiness?.items || [];
     const allServiceCredsFilled =
         serviceItems.length > 0 &&
         serviceItems.every((item) => credentialNotes[item.order_item_id]?.trim());
@@ -233,7 +228,7 @@ const FulfillmentQueue = () => {
                             <div className="fulfill-meta-row">
                                 <span className="label">Total</span>
                                 <span style={{ fontFamily: 'var(--font-mono)' }}>
-                                    {Number(selectedOrder.total_amount).toFixed(2)} {selectedOrder.currency || 'ZAR'}
+                                    {Number(selectedOrder.total_amount).toFixed(2)} ZAR
                                 </span>
                             </div>
                         </div>
@@ -250,7 +245,7 @@ const FulfillmentQueue = () => {
                                         <div key={item.order_item_id} className="fulfill-item-card">
                                             <div className="fulfill-item-header">
                                                 <span className="label">Item</span>
-                                                <span className="badge badge-accent">{item.item_type}</span>
+                                                <span className="badge badge-accent">Service</span>
                                             </div>
                                             <div className="fulfill-item-title">{item.title}</div>
                                             <div className="fulfill-item-meta">
@@ -258,8 +253,7 @@ const FulfillmentQueue = () => {
                                                 <span className="mono">Unit Price: {Number(item.unit_price).toFixed(2)}</span>
                                             </div>
 
-                                            {item.item_type === 'SERVICE' && (
-                                                <div className="fulfill-credential-field" style={{ marginTop: '12px' }}>
+                                            <div className="fulfill-credential-field" style={{ marginTop: '12px' }}>
                                                     <Input
                                                         label="Credential / Access Info"
                                                         placeholder="Enter credential or access payload"
@@ -272,7 +266,6 @@ const FulfillmentQueue = () => {
                                                         }
                                                     />
                                                 </div>
-                                            )}
                                         </div>
                                     ))}
                                 </div>

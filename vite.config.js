@@ -14,7 +14,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-charts': ['chart.js', 'react-chartjs-2', 'recharts'],
-          'vendor-utils': ['axios', 'lucide-react', 'countup.js']
+          'vendor-utils': ['axios', 'lucide-react', 'countup.js', 'react-hot-toast']
         }
       }
     }

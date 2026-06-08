@@ -103,8 +103,6 @@ const Settings = () => {
                                 }}
                             >
                                 <option value="ZAR">ZAR – South African Rand</option>
-                                <option value="USD">USD – US Dollar</option>
-                                <option value="EUR">EUR – Euro</option>
                             </select>
                         </div>
                         <div style={{ marginBottom: '20px' }}>

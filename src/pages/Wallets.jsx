@@ -12,8 +12,7 @@ const Wallets = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('admin_token');
-      const useProxy = import.meta.env.VITE_USE_PROXY === 'true';
-      const baseURL = useProxy ? '' : (import.meta.env.VITE_API_URL || 'https://3ac2-102-254-178-13.ngrok-free.app');
+      const baseURL = "http://api.kasigsm.co.za:8000";
       const response = await fetch(`${baseURL}/wallet/all`, {
         headers: {
           Authorization: `Bearer ${token}`,

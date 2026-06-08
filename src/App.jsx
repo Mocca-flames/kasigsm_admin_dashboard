@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/useAuth';
+import { Toaster } from './components/Toaster';
 import DashboardLayout from './layouts/DashboardLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -44,6 +45,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <Toaster />
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginRedirect />} />

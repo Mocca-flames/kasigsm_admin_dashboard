@@ -152,10 +152,9 @@ const OrderDetail = () => {
                 </Card>
                 <Card title="Total Amount">
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)' }}>
-                        {Number(order.total_amount).toFixed(2)}
+                        {Number(order.total_amount).toFixed(2)} ZAR
                     </div>
                 </Card>
-                <Card title="Currency">{order.currency || 'ZAR'}</Card>
             </div>
 
             <Card title="Actions">
@@ -245,7 +244,7 @@ const OrderDetail = () => {
                             <div className="fulfill-meta-row">
                                 <span className="label">Total</span>
                                 <span style={{ fontFamily: 'var(--font-mono)' }}>
-                                    {Number(order.total_amount).toFixed(2)} {order.currency || 'ZAR'}
+                                    {Number(order.total_amount).toFixed(2)} ZAR
                                 </span>
                             </div>
                         </div>
@@ -260,7 +259,7 @@ const OrderDetail = () => {
                                         <div key={item.order_item_id} className="fulfill-item-card">
                                             <div className="fulfill-item-header">
                                                 <span className="label">Item</span>
-                                                <span className="badge badge-accent">{item.item_type}</span>
+                                                <span className="badge badge-accent">Service</span>
                                             </div>
                                             <div className="fulfill-item-title">{item.title}</div>
                                             <div className="fulfill-item-meta">
@@ -269,8 +268,7 @@ const OrderDetail = () => {
                                                     Unit Price: {Number(item.unit_price).toFixed(2)}
                                                 </span>
                                             </div>
-                                            {item.item_type === 'SERVICE' && (
-                                                <div className="fulfill-credential-field" style={{ marginTop: '12px' }}>
+                                            <div className="fulfill-credential-field" style={{ marginTop: '12px' }}>
                                                     <input
                                                         className="input"
                                                         placeholder="Credential / access payload"
@@ -283,7 +281,6 @@ const OrderDetail = () => {
                                                         }
                                                     />
                                                 </div>
-                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -331,7 +328,7 @@ const OrderDetail = () => {
                     <h3>Summary</h3>
                     <div className="receipt-row">
                         <span>Total Amount</span>
-                        <span>{Number(order.total_amount).toFixed(2)} {order.currency || 'ZAR'}</span>
+                        <span>{Number(order.total_amount).toFixed(2)} ZAR</span>
                     </div>
                 </div>
                 {readiness?.items?.length > 0 && (
@@ -341,22 +338,18 @@ const OrderDetail = () => {
                             <thead>
                                 <tr>
                                     <th>Title</th>
-                                    <th>Type</th>
                                     <th>Qty</th>
                                     <th>Unit Price</th>
-                                    {readiness.items.some(i => i.item_type === 'SERVICE') && <th>Credential</th>}
+                                    <th>Credential</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {readiness.items.map((item) => (
                                     <tr key={item.order_item_id}>
                                         <td>{item.title}</td>
-                                        <td>{item.item_type}</td>
                                         <td>{item.quantity}</td>
                                         <td>{Number(item.unit_price).toFixed(2)}</td>
-                                        {readiness.items.some(i => i.item_type === 'SERVICE') && (
-                                            <td>{credentialNotes[item.order_item_id] || '(after fulfillment)'}</td>
-                                        )}
+                                        <td>{credentialNotes[item.order_item_id] || '(after fulfillment)'}</td>
                                     </tr>
                                 ))}
                             </tbody>

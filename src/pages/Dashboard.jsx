@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, StatCard } from '../components/Card';
 import { getStatsSummary, getOrders } from '../services/api';
 import Icon from '../components/Icons';
-import { RadialBarChart, RadialBar, Tooltip } from 'recharts';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -12,7 +11,6 @@ const Dashboard = () => {
         total_revenue: '0',
         total_clients: 0,
         total_items: 0,
-        low_stock_items: 0,
         fulfilled_orders: 0,
         pending_fulfillment: 0,
         refunded_orders: 0,
@@ -114,19 +112,6 @@ const Dashboard = () => {
                 />
             </div>
 
-            {stats.low_stock_items > 0 && (
-                <div className="grid grid-1" style={{ marginBottom: '24px' }}>
-                    <Card title="Inventory Alert" color="danger">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Icon name="alert" size={24} />
-                            <div>
-                                <strong>{stats.low_stock_items}</strong> item{stats.low_stock_items !== 1 ? 's' : ''} are currently low in stock and may need restocking.
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            )}
-
             {statusEntries.length > 0 && (
                 <div className="grid grid-1" style={{ marginBottom: '24px' }}>
                     <Card title={`Orders by Status (Last ${stats.period_days || 30} Days)`}>
@@ -207,66 +192,6 @@ const Dashboard = () => {
                     </Card>
                 </div>
             )}
-
-            <div className="grid grid-1" style={{ marginBottom: '24px' }}>
-                <Card title="Inventory Status" className="animate-in">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div className="chart" style={{ maxWidth: '320px', margin: '0 auto' }}>
-                            <RadialBarChart
-                                width={320}
-                                height={260}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius="70%"
-                                outerRadius="100%"
-                                data={[
-                                    {
-                                        name: 'In Stock',
-                                        value: Math.max(0, stats.total_items - stats.low_stock_items),
-                                        fill: 'var(--accent)',
-                                    },
-                                    {
-                                        name: 'Low Stock',
-                                        value: stats.low_stock_items || 0,
-                                        fill: 'var(--color-warning)',
-                                    },
-                                    {
-                                        name: 'Out of Stock',
-                                        value: 0,
-                                        fill: 'var(--color-danger)',
-                                    },
-                                ]}
-                                startAngle={90}
-                                endAngle={-270}
-                            >
-                                <RadialBar
-                                    background={{ fill: 'transparent' }}
-                                    dataKey="value"
-                                    cornerRadius={8}
-                                    style={{ cursor: 'pointer' }}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'var(--bg-card)',
-                                        border: `1px solid var(--border-subtle)`,
-                                        color: 'var(--text-primary)',
-                                        borderRadius: 'var(--radius-md)',
-                                        fontFamily: 'var(--font-body)',
-                                        fontSize: 'var(--text-sm)',
-                                        padding: '8px 12px',
-                                    }}
-                                    formatter={(value, name) => [`${value} items`, name]}
-                                />
-                            </RadialBarChart>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                            <span className="badge badge-info">In Stock {Math.max(0, stats.total_items - stats.low_stock_items)}</span>
-                            <span className="badge badge-warning">Low Stock {stats.low_stock_items || 0}</span>
-                            <span className="badge badge-danger">Out of Stock 0</span>
-                        </div>
-                    </div>
-                </Card>
-            </div>
 
             <div className="grid grid-2" style={{ marginBottom: '24px' }}>
                 <Card title="Order Fulfillment">

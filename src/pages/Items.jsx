@@ -5,12 +5,10 @@ import {
   updateItem,
   toggleItemVisibility,
   archiveItem,
-  getCategories,
 } from '../services/api';
 import {
   slugToSearchTokens,
   matchesSlugSearch,
-  ITEM_TYPE_OPTIONS,
   BRAND_OPTIONS,
   SERVICE_TYPE_OPTIONS,
 } from '../utils/itemHelpers';
@@ -23,14 +21,6 @@ import Modal from '../components/Modal';
 import DropZone from '../components/DropZone';
 
 const PAGE_SIZE = 10;
-
-const getItemTypeLabel = (item) => {
-  switch (item.item_type) {
-    case 'PRODUCT': return 'Product';
-    case 'SERVICE': return 'Service';
-    default: return item.item_type;
-  }
-};
 
 const truncateSentences = (text, max = 2) => {
   if (!text) return '—';
@@ -47,7 +37,6 @@ const truncateSentences = (text, max = 2) => {
 
 const Items = () => {
   const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -62,12 +51,10 @@ const Items = () => {
     service_type: '',
     thumbnail: '',
     price_markup: '',
-    currency: 'ZAR',
     delivery_time: '',
   });
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [itemTypeFilter, setItemTypeFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
   const [serviceTypeFilter, setServiceTypeFilter] = useState('');
   const [sortOption, setSortOption] = useState('alpha_asc');
@@ -82,15 +69,13 @@ const Items = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        console.log('Fetching items and categories...');
-        const [itemsRes, categoriesRes] = await Promise.all([getItems({ offset: 0, limit: 100, with_media: true }), getCategories()]);
+        console.log('Fetching items...');
+        const itemsRes = await getItems({ offset: 0, limit: 100, with_media: true });
         console.log('Items response:', itemsRes);
-        console.log('Categories response:', categoriesRes);
         if (!cancelled) {
           // API may return an array or an object { items: [...], count }
           const itemsList = Array.isArray(itemsRes) ? itemsRes : (itemsRes.items || itemsRes.data || []);
           setItems(itemsList || []);
-          setCategories(categoriesRes || []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -117,7 +102,6 @@ const Items = () => {
       service_type: item.service_type || '',
       thumbnail: item.thumbnail || item.media_url || '',
       price_markup: item.price_markup || '',
-      currency: item.currency || 'ZAR',
       delivery_time: item.delivery_time || '',
     });
   };
@@ -167,18 +151,16 @@ const Items = () => {
 
   const resetFilters = () => {
     setSearchQuery('');
-    setItemTypeFilter('');
     setBrandFilter('');
     setServiceTypeFilter('');
     setSortOption('alpha_asc');
   };
 
-  const activeFilterCount = [itemTypeFilter, brandFilter, serviceTypeFilter].filter(Boolean).length;
+  const activeFilterCount = [brandFilter, serviceTypeFilter].filter(Boolean).length;
 
 const filteredItems = useMemo(() => {
     if (!items || items.length === 0) return [];
     return items.filter(item => {
-      if (itemTypeFilter && item.item_type !== itemTypeFilter) return false;
       if (brandFilter && item.brand !== brandFilter) return false;
       if (serviceTypeFilter && item.service_type !== serviceTypeFilter) return false;
       if (searchQuery && searchQuery.trim()) {
@@ -194,7 +176,7 @@ const filteredItems = useMemo(() => {
       }
       return true;
     });
-  }, [items, searchQuery, itemTypeFilter, brandFilter, serviceTypeFilter]);
+  }, [items, searchQuery, brandFilter, serviceTypeFilter]);
 
   const sortedItems = useMemo(() => {
     if (!filteredItems || filteredItems.length === 0) return [];
@@ -341,7 +323,7 @@ const filteredItems = useMemo(() => {
       label: 'Price',
       render: (row) => (
         <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 'var(--weight-medium)' }}>
-          {Number(row.price_final || 0).toFixed(2)} {row.currency || 'ZAR'}
+          {Number(row.price_final || 0).toFixed(2)} ZAR
         </span>
       ),
     },
@@ -359,16 +341,6 @@ const filteredItems = useMemo(() => {
       ),
     },
     {
-      key: 'item_type',
-      label: 'Type',
-      render: (row) => getItemTypeLabel(row),
-    },
-    {
-      key: 'category',
-      label: 'Category',
-      render: (row) => <span style={{ color: 'var(--accent)', fontSize: 'var(--text-sm)' }}>{row.category || '—'}</span>,
-    },
-{
        key: 'is_visible',
        label: 'Visible',
        render: (row) => (
@@ -468,19 +440,6 @@ const filteredItems = useMemo(() => {
                   </div>
                 )}
                 </div>
-
-              <div className="filter-group">
-                <label className="filter-label">Type</label>
-                <select
-                  value={itemTypeFilter}
-                  onChange={(e) => setItemTypeFilter(e.target.value)}
-                  className="input"
-                >
-                  <option value="">All Types (SERVICE + PRODUCT)</option>
-                  <option value="SERVICE">SERVICE</option>
-                  <option value="PRODUCT">PRODUCT</option>
-                </select>
-              </div>
 
               <div className="filter-group">
                 <label className="filter-label">Brand / Phone</label>
@@ -615,39 +574,21 @@ const filteredItems = useMemo(() => {
               />
 
               <div className="form-group">
-                <label className="form-label">Type</label>
-                <div className="radio-group">
-                  {ITEM_TYPE_OPTIONS.filter(o => o.value).map(opt => (
-                    <label key={opt.value} className="radio-label">
-                      <input
-                        type="radio"
-                        name="item_type"
-                        value={opt.value}
-                        checked={formData.item_type === opt.value}
-                        onChange={(e) => handleChange('item_type', e.target.value)}
-                      />
-                      <span>{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
+                <label className="form-label">Category</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleChange('category', e.target.value)}
+                  className="input"
+                  required
+                >
+                  <option value="">-- Select category --</option>
+                  <option value="Remote Services">Remote Services</option>
+                  <option value="Tool Rental">Tool Rental</option>
+                </select>
               </div>
 
-              <Input
-                label="Category"
-                value={formData.category}
-                onChange={(e) => handleChange('category', e.target.value)}
-                list="categories-list"
-                required
-                fullWidth
-              />
-              <datalist id="categories-list">
-                {categories.map(c => <option key={c.id} value={c.name} />)}
-              </datalist>
-
-              {(formData.item_type === 'SERVICE') && (
-                <>
-                  <div className="form-group">
-                    <label className="form-label">Service Type</label>
+              <div className="form-group">
+                <label className="form-label">Service Type</label>
                     <select
                       value={formData.service_type}
                       onChange={(e) => handleChange('service_type', e.target.value)}
@@ -673,8 +614,6 @@ const filteredItems = useMemo(() => {
                       ))}
                     </select>
                   </div>
-                </>
-              )}
 
               <Input
                 label="Description"
@@ -697,13 +636,6 @@ const filteredItems = useMemo(() => {
                 step="0.01"
                 value={formData.price_markup}
                 onChange={(e) => handleChange('price_markup', e.target.value)}
-                fullWidth
-              />
-
-              <Input
-                label="Currency"
-                value={formData.currency}
-                onChange={(e) => handleChange('currency', e.target.value)}
                 fullWidth
               />
 

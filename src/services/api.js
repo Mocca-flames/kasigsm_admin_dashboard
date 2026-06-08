@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const useProxy = import.meta.env.VITE_USE_PROXY === 'true';
-const API_BASE_URL = useProxy ? '' : (import.meta.env.VITE_API_URL || "https://b686-102-253-152-3.ngrok-free.app");
+const API_BASE_URL = "https://api.kasigsm.co.za";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("admin_token");
@@ -9,10 +8,7 @@ const getAuthHeaders = () => {
 };
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "ngrok-skip-browser-warning": "true",
-  },
+  baseURL: API_BASE_URL
 });
 
 api.interceptors.request.use((config) => {
@@ -33,7 +29,7 @@ api.interceptors.response.use(
 );
 
 export const login = async (email, password) => {
-  const baseURL = useProxy ? '' : (import.meta.env.VITE_API_URL || "https://b686-102-253-152-3.ngrok-free.app");
+  const baseURL = API_BASE_URL;
   const formData = new URLSearchParams();
   formData.append("username", email);
   formData.append("password", password);
@@ -48,15 +44,13 @@ export const logout = () => {
   window.dispatchEvent(new Event("auth-change"));
 };
 
-export const getItems = async ({ offset = 0, limit = 100, q = '', item_type = '', category = '', brand = '', service = '', service_type = '', product = '', with_media = true, alphabetize = true }) => {
+export const getItems = async ({ offset = 0, limit = 100, q = '', category = '', brand = '', service = '', service_type = '', with_media = true, alphabetize = true }) => {
   const params = { offset, limit, with_media, alphabetize };
   if (q) params.q = q;
-  if (item_type) params.item_type = item_type;
   if (category) params.category = category;
   if (brand) params.brand = brand;
   if (service) params.service = service;
   if (service_type) params.service_type = service_type;
-  if (product !== '') params.product = product;
   const response = await api.get('/admin/items', { params });
   return response.data;
 };

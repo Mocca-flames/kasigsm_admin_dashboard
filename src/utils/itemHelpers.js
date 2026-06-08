@@ -9,18 +9,12 @@ export function matchesSlugSearch(slug, query) {
   return terms.every(term => tokens.some(t => t.startsWith(term) || term.startsWith(t)));
 }
 
-export function getItemTypeLabel(item) {
-  switch (item.item_type) {
-    case 'PRODUCT': return 'Product';
-    case 'SERVICE': return 'Service';
-    default: return item.item_type;
-  }
+export function getItemTypeLabel() {
+  return 'Service';
 }
 
 export const ITEM_TYPE_OPTIONS = [
-  { value: '', label: 'All Types' },
   { value: 'SERVICE', label: 'Service' },
-  { value: 'PRODUCT', label: 'Product' },
 ];
 
 export const BRAND_OPTIONS = [
@@ -58,30 +52,9 @@ export const SERVICE_TYPE_OPTIONS = [
   { value: 'other', label: 'Other Service' },
 ];
 
-export const PRODUCT_OPTIONS = [
-  { value: '', label: 'All Categories' },
-  { value: 'true', label: 'Products Only' },
-  { value: 'false', label: 'Services Only' },
-];
-
-export const ACTION_OPTIONS = [
-  { value: '', label: 'All Actions' },
-  { value: 'repair', label: 'Repair' },
-  { value: 'unlock', label: 'Unlock' },
-  { value: 'bypass', label: 'Bypass' },
-  { value: 'replace', label: 'Replace' },
-  { value: 'flash', label: 'Flash' },
-  { value: 'remove', label: 'Remove' },
-  { value: 'fix', label: 'Fix' },
-  { value: 'install', label: 'Install' },
-  { value: 'restore', label: 'Restore' },
-];
-
 export const SORT_OPTIONS = [
   { value: 'alpha_asc', label: 'A → Z (Alphabetical)' },
   { value: 'alpha_desc', label: 'Z → A' },
   { value: 'price_asc', label: 'Price: Low → High' },
   { value: 'price_desc', label: 'Price: High → Low' },
-  { value: 'stock_asc', label: 'Stock: Low → High' },
-  { value: 'stock_desc', label: 'Stock: High → Low' },
 ];
