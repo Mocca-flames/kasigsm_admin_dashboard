@@ -12,7 +12,7 @@ const Wallets = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('admin_token');
-      const baseURL = "http://api.kasigsm.co.za:8000";
+      const baseURL = "https://api.kasigsm.co.za";
       const response = await fetch(`${baseURL}/wallet/all`, {
         headers: {
           Authorization: `Bearer ${token}`,

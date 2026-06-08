@@ -19,7 +19,7 @@ const TopUps = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('admin_token');
-      const baseURL = "http://api.kasigsm.co.za:8000";
+      const baseURL = "https://api.kasigsm.co.za";
       const url = status
         ? `${baseURL}/wallet/top-ups?status=${status}`
         : `${baseURL}/wallet/top-ups`;
@@ -56,7 +56,7 @@ const TopUps = () => {
     try {
       setSubmitting((prev) => ({ ...prev, [topUp.id]: true }));
       const token = localStorage.getItem('admin_token');
-      const baseURL = "http://api.kasigsm.co.za:8000";
+      const baseURL = "https://api.kasigsm.co.za";
       const response = await fetch(`${baseURL}/wallet/top-ups/${topUp.id}/review`, {
         method: 'POST',
         headers: {
